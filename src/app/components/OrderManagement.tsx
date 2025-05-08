@@ -13,7 +13,7 @@ export default function OrderManagement({ orders, setOrders, setIsOrderModalOpen
     <>
       {/* Toolbar, Filters, Table */}
       <div style={{ background: '#1a5595', height: 40, display: 'flex', alignItems: 'center', padding: '0 13px', color: '#fff', fontSize: 17 }}>
-        <span style={{fontWeight:500,marginRight:20}}>주문관리 [{orders.length}]</span>
+        <span style={{fontWeight:500,marginRight:20}}>주문등록 [{orders.length}]</span>
         <span style={{flex:1}} />
         <span 
           title="주문등록" 
@@ -72,7 +72,7 @@ export default function OrderManagement({ orders, setOrders, setIsOrderModalOpen
         </table>
       </div>
       <div style={{height:41,background:'#f4f5f5',display:'flex',alignItems:'center',borderTop:'1px solid #bcbcbc',padding:'0 20px',justifyContent:'space-between',fontSize:15}}>
-        <span>주문관리 [{orders.length}] 건 - 완료</span>
+        <span>주문등록 [{orders.length}] 건 - 완료</span>
         <div style={{display:'flex',alignItems:'center',gap:8}}>
           <span style={{background:'#1976d2',color:'#fff',borderRadius:4,padding:'3px 11px',marginRight:8,marginLeft:6,fontWeight:500}}>1 / 1</span>
           <select style={{border:'1px solid #bcbcbc',borderRadius:6,padding:'3px 19px',fontSize:15}} defaultValue="90 개 페이지별">

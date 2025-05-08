@@ -9,10 +9,10 @@ import AccountManagement from "../components/AccountManagement";
 import OrderConfirmation from "../components/OrderConfirmation";
 
 // Demo data for each tab
-type TabType = "주문관리" | "계정관리" | "품목관리" | "주문확인";
+type TabType = "주문등록" | "계정관리" | "품목관리" | "주문확인";
 
 const TAB_LIST = [
-  { label: "주문관리", icon: "📦" },
+  { label: "주문등록", icon: "📦" },
   { label: "품목관리", icon: "📋" },
   { label: "주문확인", icon: "📃" },
   { label: "계정관리", icon: "🔑" },
@@ -81,7 +81,7 @@ const ACCOUNT_ROWS = [
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<TabType>("주문관리");
+  const [activeTab, setActiveTab] = useState<TabType>("주문등록");
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const [orders, setOrders] = useState(ORDER_ROWS);
   // 사용자 권한 상태 (실제 구현에서는 로그인 시 서버에서 받아온 권한 정보를 사용)
@@ -94,16 +94,16 @@ export default function DashboardPage() {
   // sidebar structure with role-based access
   const menu = [
     // 일반 사용자 메뉴
-    { name: "주문관리", icon: "📦", isAdminOnly: false },
-    { name: "품목관리", icon: "📋", isAdminOnly: false },
+    { name: "주문등록", icon: "📦", isAdminOnly: false },
     // 관리자 전용 메뉴
+    { name: "품목관리", icon: "📋", isAdminOnly: true },
     { name: "주문확인", icon: "📃", isAdminOnly: true },
     { name: "계정관리", icon: "🔑", isAdminOnly: true },
   ];
 
   // table and UI depending on activeTab
   function renderContent() {
-    if (activeTab === "주문관리") {
+    if (activeTab === "주문등록") {
       return <OrderManagement orders={orders} setOrders={setOrders} setIsOrderModalOpen={setIsOrderModalOpen} />;
     }
     
