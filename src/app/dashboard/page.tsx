@@ -2,6 +2,7 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import OrderCreateModal, { OrderData } from "../components/OrderCreateModal";
 
 // Demo data for each tab
 type TabType = "주문관리" | "계정관리" | "품목관리" | "화면관리";
@@ -35,18 +36,14 @@ const ACCOUNT_ROWS = [
 export default function DashboardPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>("주문관리");
+  const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
+  const [orders, setOrders] = useState(ORDER_ROWS);
 
   // sidebar structure
   const menu = [
     { name: "주문관리", icon: "📦" },
-    {
-      name: "관리",
-      icon: "▶", // mimic
-      children: [
-        { name: "품목관리", icon: "📋" },
-        { name: "화면관리", icon: "🖥️" },
-      ],
-    },
+    { name: "품목관리", icon: "📋" },
+    { name: "화면관리", icon: "🖥️" },
     { name: "계정관리", icon: "🔑" },
   ];
 
@@ -57,9 +54,13 @@ export default function DashboardPage() {
         <>
           {/* Toolbar, Filters, Table */}
           <div style={{ background: '#1a5595', height: 40, display: 'flex', alignItems: 'center', padding: '0 13px', color: '#fff', fontSize: 17 }}>
-            <span style={{fontWeight:500,marginRight:20}}>주문관리 [1011]</span>
+            <span style={{fontWeight:500,marginRight:20}}>주문관리 [{orders.length}]</span>
             <span style={{flex:1}} />
-            <span title="주문등록" style={{marginLeft:18,marginRight:12,cursor:'pointer',fontSize:20}}>📝</span>
+            <span 
+              title="주문등록" 
+              style={{marginLeft:18,marginRight:12,cursor:'pointer',fontSize:20}}
+              onClick={() => setIsOrderModalOpen(true)}
+            >📝</span>
             <span title="수정" style={{marginRight:12,cursor:'pointer',fontSize:20}}>✏️</span>
             <span title="삭제" style={{marginRight:12,cursor:'pointer',fontSize:20}}>🗑️</span>
             <span title="엑셀" style={{marginRight:12,cursor:'pointer',fontSize:20}}>📄</span>
@@ -264,11 +265,38 @@ export default function DashboardPage() {
           >
             <span style={{ fontSize: 21, marginRight: 10 }}>📦</span> 주문관리
           </li>
-          <li style={{ paddingLeft: 34, fontSize: 15.5, color: '#7c7c7c', paddingBottom: 1, paddingTop: 11, fontWeight: 500, letterSpacing:'-1px', display: 'flex', alignItems: 'center'}}>
-            <span style={{fontSize:16,marginRight:7,marginTop:2}}>▶</span> 관리
+          <li
+            style={{
+              background: activeTab === "품목관리" ? "#c6dee9" : "transparent",
+              color: activeTab === "품목관리" ? "#1a5595" : "#222",
+              fontWeight: 500,
+              padding: "18px 22px 12px 22px",
+              fontSize: 18,
+              display: "flex",
+              alignItems: "center",
+              cursor:'pointer',
+              marginTop: 5,
+            }}
+            onClick={()=>setActiveTab("품목관리")}
+          >
+            <span style={{ fontSize: 21, marginRight: 10 }}>📋</span> 품목관리
           </li>
-          <li style={{paddingLeft:52,marginTop:7,cursor:'pointer',color:activeTab==="품목관리"?"#1976d2":"#222",fontWeight:activeTab==="품목관리"?600:400,marginBottom:3}} onClick={()=>setActiveTab("품목관리")}>📋 품목관리</li>
-          <li style={{paddingLeft:52,marginBottom:3,cursor:'pointer',color:activeTab==="화면관리"?"#1976d2":"#222",fontWeight:activeTab==="화면관리"?600:400}} onClick={()=>setActiveTab("화면관리")}>🖥️ 화면관리</li>
+          <li
+            style={{
+              background: activeTab === "화면관리" ? "#c6dee9" : "transparent",
+              color: activeTab === "화면관리" ? "#1a5595" : "#222",
+              fontWeight: 500,
+              padding: "18px 22px 12px 22px",
+              fontSize: 18,
+              display: "flex",
+              alignItems: "center",
+              cursor:'pointer',
+              marginTop: 5,
+            }}
+            onClick={()=>setActiveTab("화면관리")}
+          >
+            <span style={{ fontSize: 21, marginRight: 10 }}>🖥️</span> 화면관리
+          </li>
           <li
             style={{
               background: activeTab === "계정관리" ? "#3396ff" : "transparent",
@@ -292,8 +320,27 @@ export default function DashboardPage() {
     );
   }
 
+  // 주문 데이터 제출 처리
+  const handleOrderSubmit = (orderData: OrderData) => {
+    // 실제 구현에서는 API 호출 등을 통해 서버에 데이터를 저장할 수 있습니다.
+    // 여기서는 로컬 상태에 추가하는 방식으로 구현합니다.
+    const newOrder = {
+      ...orderData,
+      regid: "개발", // 현재 로그인한 사용자 ID
+    };
+
+    setOrders([newOrder, ...orders]);
+    setIsOrderModalOpen(false);
+  };
+
   return (
     <div style={{ minHeight: "100vh", background: "#f4f5f5", display: "flex", flexDirection: "column" }}>
+      {/* 주문 등록 모달 */}
+      <OrderCreateModal 
+        isOpen={isOrderModalOpen} 
+        onClose={() => setIsOrderModalOpen(false)} 
+        onSubmit={handleOrderSubmit}
+      />
       {/* Header */}
       <div style={{ background: "#fff", borderBottom: "1px solid #c6dee9", display: "flex", alignItems: "center", height: 50, paddingLeft: 32 }}>
         <Image src="https://ext.same-assets.com/1304735728/1117858943.png" alt="BIOMAX Logo" width={90} height={30} style={{ marginRight: 10 }} />
