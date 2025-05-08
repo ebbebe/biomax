@@ -27,6 +27,46 @@ const ORDER_ROWS = [
   },
 ];
 
+// 품목 데이터
+// 품목관리에서 사용할 데이터 구조
+// 연결된 거래처 정보 포함
+const PRODUCT_ROWS = [
+  {
+    id: "1",
+    name: "AQUBAC 종균제 (kg)",
+    price: "10,000",
+    stock: "5,000",
+    category: "백신",
+    linkedCompanies: ["주식회사 알에이디"],
+  },
+  {
+    id: "2",
+    name: "바이오맥스 (L)",
+    price: "15,000",
+    stock: "3,000",
+    category: "산소공급제",
+    linkedCompanies: ["칼릭스브릴리언"],
+  },
+  {
+    id: "3",
+    name: "바이오스타 (kg)",
+    price: "12,000",
+    stock: "2,500",
+    category: "백신",
+    linkedCompanies: ["칼릭스브릴리언", "주식회사제뉴윈"],
+  },
+];
+
+// 거래처 데이터 - 품목 연결을 위해 사용
+// 실제로는 ACCOUNT_ROWS에서 가져와야 하지만 예시로 분리
+// 추후 계정관리와 통합하여 관리해야 함
+const COMPANY_ROWS = [
+  { id: "1", name: "주식회사 알에이디" },
+  { id: "2", name: "칼릭스브릴리언" },
+  { id: "3", name: "주식회사제뉴윈" },
+  { id: "4", name: "개발" },
+];
+
 const ACCOUNT_ROWS = [
   { login: "333", name: "3(권한)", company: "3(권한)", brn: "3(권한)", phone: "", contact: "", addr: "", perm: "허용", level: "일반" },
   { login: "1111", name: "주식회사 알에이디", company: "주식회사 알에이디", brn: "29026561616", phone: "01056541621", contact: "", addr: "", perm: "허용", level: "일반" },
@@ -42,6 +82,13 @@ export default function DashboardPage() {
   const [orders, setOrders] = useState(ORDER_ROWS);
   // 사용자 권한 상태 (실제 구현에서는 로그인 시 서버에서 받아온 권한 정보를 사용)
   const [isAdmin, setIsAdmin] = useState(true); // 기본값을 true로 설정하여 관리자 메뉴 표시
+  
+  // 품목관리 관련 상태
+  const [products, setProducts] = useState(PRODUCT_ROWS);
+  const [companies, setCompanies] = useState(COMPANY_ROWS);
+  const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
+  const [isCompanyModalOpen, setIsCompanyModalOpen] = useState(false);
+  const [selectedCompanyFilter, setSelectedCompanyFilter] = useState<string>("");
 
   // sidebar structure with role-based access
   const menu = [
@@ -87,32 +134,32 @@ export default function DashboardPage() {
             <button style={{background:'#1976d2',color:'#fff',fontWeight:500,border:'none',borderRadius:4,fontSize:16,padding:'6px 19px',marginLeft:7,boxShadow:'0 0.7px 2.2px #7c747c30',cursor:'pointer'}}>조회</button>
           </div>
           <div style={{flex:1,background:'#fff',padding:'0 0 0 0',display:'flex',flexDirection:'column',overflow:'auto'}}>
-            <table style={{width:'100%',borderCollapse:'collapse',fontSize:17,marginTop:1}}>
+            <table style={{width:'100%',borderCollapse:'collapse',fontSize:17,marginTop:1,border:'1px solid #bcbcbc'}}>
               <thead>
                 <tr style={{background:'#f4f5f5',borderBottom:'2.5px solid #1976d2',color:'#1a5595'}}>
-                  <th style={{width:50,padding:'9px 0'}}><input type="checkbox" checked={true} readOnly /></th>
-                  <th style={{padding:'9px 0'}}>등록일</th>
-                  <th style={{padding:'9px 0'}}>제품명</th>
-                  <th style={{padding:'9px 0'}}>수량</th>
-                  <th style={{padding:'9px 0'}}>메모</th>
-                  <th style={{padding:'9px 0'}}>등록아이디</th>
-                  <th style={{padding:'9px 0'}}>사업자명</th>
-                  <th style={{padding:'9px 0'}}>주소</th>
-                  <th style={{padding:'9px 0'}}>주문상태</th>
+                  <th style={{width:50,padding:'9px 0',border:'1px solid #bcbcbc'}}><input type="checkbox" checked={true} readOnly /></th>
+                  <th style={{padding:'9px 0',border:'1px solid #bcbcbc'}}>등록일</th>
+                  <th style={{padding:'9px 0',border:'1px solid #bcbcbc'}}>제품명</th>
+                  <th style={{padding:'9px 0',border:'1px solid #bcbcbc'}}>수량</th>
+                  <th style={{padding:'9px 0',border:'1px solid #bcbcbc'}}>메모</th>
+                  <th style={{padding:'9px 0',border:'1px solid #bcbcbc'}}>등록아이디</th>
+                  <th style={{padding:'9px 0',border:'1px solid #bcbcbc'}}>사업자명</th>
+                  <th style={{padding:'9px 0',border:'1px solid #bcbcbc'}}>주소</th>
+                  <th style={{padding:'9px 0',border:'1px solid #bcbcbc'}}>주문상태</th>
                 </tr>
               </thead>
               <tbody>
                 {ORDER_ROWS.map((o, i) => (
-                  <tr key={o.regid} style={{borderTop:'1.3px solid #bcbcbc',textAlign:'center',color:'#333'}}>
-                    <td><input type="checkbox" checked={i===0} readOnly /></td>
-                    <td>{o.date}</td>
-                    <td>{o.product}</td>
-                    <td>{o.qty}</td>
-                    <td>{o.memo}</td>
-                    <td>{o.regid}</td>
-                    <td>{o.company}</td>
-                    <td>{o.address}</td>
-                    <td>{o.orderStatus}</td>
+                  <tr key={o.regid} style={{textAlign:'center',color:'#333'}}>
+                    <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}><input type="checkbox" checked={i===0} readOnly /></td>
+                    <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{o.date}</td>
+                    <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{o.product}</td>
+                    <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{o.qty}</td>
+                    <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{o.memo}</td>
+                    <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{o.regid}</td>
+                    <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{o.company}</td>
+                    <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{o.address}</td>
+                    <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{o.orderStatus}</td>
                   </tr>
                 ))}
               </tbody>
@@ -132,6 +179,255 @@ export default function DashboardPage() {
         </>
       );
     }
+    if (activeTab === "품목관리") {
+      return (
+        <>
+          <div style={{ background: '#1a5595', height: 40, display: 'flex', alignItems: 'center', padding: '0 13px', color: '#fff', fontSize: 17 }}>
+            <span style={{fontWeight:500,marginRight:20}}>품목관리 [{products.length}]</span>
+            <span style={{flex:1}} />
+            {/* toolbar icons */}
+            <span title="새로고침" style={{marginLeft:12,marginRight:11,cursor:'pointer',fontSize:19}}>↻</span>
+            <span title="등록" style={{marginRight:13,cursor:'pointer',fontSize:19}}>💾</span>
+            <span title="수정" style={{marginRight:13,cursor:'pointer',fontSize:19}}>✏️</span>
+            <span title="삭제" style={{marginRight:13,cursor:'pointer',fontSize:19}}>🗑️</span>
+            <span title="엑셀" style={{marginRight:13,cursor:'pointer',fontSize:19}}>📄</span>
+          </div>
+          {/* Filters */}
+          <div style={{display:'flex',alignItems:'center',padding:'17px 12px 8px 14px',background:'#fff',borderBottom:'1px solid #c6dee9',gap:8}}>
+            <input style={{border:'1px solid #bcbcbc',borderRadius:4,padding:'5px 8px',fontSize:15,width:130}} placeholder="제품명" />
+            <input style={{border:'1px solid #bcbcbc',borderRadius:4,padding:'5px 8px',fontSize:15,width:113}} placeholder="카테고리" />
+            <select 
+              style={{border:'1px solid #bcbcbc',borderRadius:4,padding:'5px 11px',fontSize:15,minWidth:150}} 
+              value={selectedCompanyFilter}
+              onChange={(e) => setSelectedCompanyFilter(e.target.value)}
+            >
+              <option value="">거래처 전체</option>
+              {companies.map(company => (
+                <option key={company.id} value={company.name}>{company.name}</option>
+              ))}
+            </select>
+            <button style={{background:'#1976d2',color:'#fff',fontWeight:500,border:'none',borderRadius:4,fontSize:16,padding:'6px 19px',marginLeft:4,boxShadow:'0 0.7px 2.2px #7c747c30',cursor:'pointer'}}>조회</button>
+          </div>
+          <div style={{flex:1,background:'#fff',padding:'0 0 0 0',display:'flex',flexDirection:'column',overflow:'auto'}}>
+            <table style={{width:'100%',borderCollapse:'collapse',fontSize:16.7,marginTop:1}}>
+              <thead>
+                <tr style={{background:'#f4f5f5',borderBottom:'2.5px solid #1976d2',color:'#1a5595'}}>
+                  <th style={{width:51,padding:'8px 0',border:'1px solid #bcbcbc'}}><input type="checkbox" readOnly /></th>
+                  <th style={{padding:'8px 0',border:'1px solid #bcbcbc'}}>제품명</th>
+                  <th style={{padding:'8px 0',border:'1px solid #bcbcbc'}}>가격</th>
+                  <th style={{padding:'8px 0',border:'1px solid #bcbcbc'}}>재고</th>
+                  <th style={{padding:'8px 0',border:'1px solid #bcbcbc'}}>카테고리</th>
+                  <th style={{padding:'8px 0',border:'1px solid #bcbcbc'}}>연결된 거래처</th>
+                  <th style={{padding:'8px 0',width:120,border:'1px solid #bcbcbc'}}>거래처 연결</th>
+                </tr>
+              </thead>
+              <tbody>
+                {products
+                  .filter(product => !selectedCompanyFilter || product.linkedCompanies.includes(selectedCompanyFilter))
+                  .map((product, i) => (
+                  <tr key={product.id} style={{textAlign:'center',color:'#333'}}>
+                    <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>
+                      <input 
+                        type="checkbox" 
+                        checked={selectedProduct === product.id} 
+                        onChange={() => setSelectedProduct(selectedProduct === product.id ? null : product.id)} 
+                      />
+                    </td>
+                    <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{product.name}</td>
+                    <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{product.price}</td>
+                    <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{product.stock}</td>
+                    <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{product.category}</td>
+                    <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>
+                      {product.linkedCompanies.length > 0 ? (
+                        <div style={{display:'flex',flexWrap:'wrap',justifyContent:'center',gap:5}}>
+                          {product.linkedCompanies.map(company => (
+                            <span 
+                              key={company} 
+                              style={{
+                                background:'#e3f2fd',
+                                color:'#1976d2',
+                                padding:'2px 8px',
+                                borderRadius:4,
+                                fontSize:14,
+                                display:'inline-block'
+                              }}
+                            >
+                              {company}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span style={{color:'#888'}}>연결된 거래처 없음</span>
+                      )}
+                    </td>
+                    <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>
+                      <button 
+                        onClick={() => {
+                          setSelectedProduct(product.id);
+                          setIsCompanyModalOpen(true);
+                        }}
+                        style={{
+                          background:'#1a5595',
+                          color:'white',
+                          border:'none',
+                          borderRadius:4,
+                          padding:'4px 10px',
+                          fontSize:14,
+                          cursor:'pointer'
+                        }}
+                      >
+                        거래처 연결
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div style={{height:41,background:'#f4f5f5',display:'flex',alignItems:'center',borderTop:'1px solid #bcbcbc',padding:'0 20px',justifyContent:'space-between',fontSize:15}}>
+            <span>품목관리 [{products.length}] 건 - 완료</span>
+            <div style={{display:'flex',alignItems:'center',gap:8}}>
+              <span style={{background:'#1976d2',color:'#fff',borderRadius:4,padding:'3px 11px',marginRight:8,marginLeft:6,fontWeight:500}}>1 / 1</span>
+              <select style={{border:'1px solid #bcbcbc',borderRadius:6,padding:'3px 19px',fontSize:15}} defaultValue="90 개 페이지별">
+                <option value="90 개 페이지별">90 개 페이지별</option>
+                <option value="30 개 페이지별">30 개 페이지별</option>
+                <option value="10 개 페이지별">10 개 페이지별</option>
+              </select>
+            </div>
+          </div>
+          
+          {/* 거래처 연결 모달 */}
+          {isCompanyModalOpen && selectedProduct && (
+            <div style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: "rgba(0, 0, 0, 0.5)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 1000,
+            }}>
+              <div style={{
+                backgroundColor: "#fff",
+                borderRadius: "8px",
+                width: "400px",
+                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                overflow: "hidden",
+              }}>
+                {/* 헤더 */}
+                <div style={{ 
+                  background: '#1a5595', 
+                  height: 50, 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  padding: '0 20px', 
+                  color: '#fff', 
+                  fontSize: 17,
+                  fontWeight: 500
+                }}>
+                  <span>거래처 연결 관리</span>
+                  <span style={{ flex: 1 }} />
+                  <span 
+                    onClick={() => setIsCompanyModalOpen(false)} 
+                    style={{ 
+                      cursor: 'pointer', 
+                      fontSize: 20 
+                    }}
+                  >
+                    ✖
+                  </span>
+                </div>
+                
+                {/* 내용 */}
+                <div style={{ padding: "20px" }}>
+                  <div style={{ marginBottom: "15px" }}>
+                    <div style={{ fontWeight: 500, marginBottom: 10 }}>
+                      제품: {products.find(p => p.id === selectedProduct)?.name}
+                    </div>
+                    
+                    <div style={{ marginTop: 15, marginBottom: 10, fontWeight: 500 }}>
+                      연결할 거래처 선택:
+                    </div>
+                    
+                    <div style={{ maxHeight: "200px", overflowY: "auto", border: "1px solid #ddd", borderRadius: 4, padding: 10 }}>
+                      {companies.map(company => {
+                        const selectedProductObj = products.find(p => p.id === selectedProduct);
+                        const isLinked = selectedProductObj?.linkedCompanies.includes(company.name);
+                        
+                        return (
+                          <div key={company.id} style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
+                            <input 
+                              type="checkbox" 
+                              id={`company-${company.id}`}
+                              checked={isLinked}
+                              onChange={() => {
+                                const updatedProducts = products.map(p => {
+                                  if (p.id === selectedProduct) {
+                                    if (isLinked) {
+                                      // 연결 해제
+                                      return {
+                                        ...p,
+                                        linkedCompanies: p.linkedCompanies.filter(c => c !== company.name)
+                                      };
+                                    } else {
+                                      // 연결 추가
+                                      return {
+                                        ...p,
+                                        linkedCompanies: [...p.linkedCompanies, company.name]
+                                      };
+                                    }
+                                  }
+                                  return p;
+                                });
+                                setProducts(updatedProducts);
+                              }}
+                              style={{ marginRight: 10 }}
+                            />
+                            <label htmlFor={`company-${company.id}`}>{company.name}</label>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* 버튼 영역 */}
+                <div 
+                  style={{ 
+                    padding: "15px 20px", 
+                    borderTop: "1px solid #c6dee9",
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    gap: "10px",
+                    background: "#f4f5f5"
+                  }}
+                >
+                  <button
+                    onClick={() => setIsCompanyModalOpen(false)}
+                    style={{
+                      padding: "8px 16px",
+                      backgroundColor: "#1a5595",
+                      color: "#fff",
+                      border: "none",
+                      borderRadius: "4px",
+                      cursor: "pointer",
+                      fontSize: "14px",
+                      fontWeight: 500,
+                    }}
+                  >
+                    확인
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </>
+      );
+    }
+    
     if (activeTab === "계정관리") {
       return (
         <>
@@ -167,29 +463,29 @@ export default function DashboardPage() {
             <table style={{width:'100%',borderCollapse:'collapse',fontSize:16.7,marginTop:1}}>
               <thead>
                 <tr style={{background:'#f4f5f5',borderBottom:'2.5px solid #1976d2',color:'#1a5595'}}>
-                  <th style={{width:51,padding:'8px 0'}}><input type="checkbox" checked={true} readOnly /></th>
-                  <th style={{padding:'8px 0'}}>계정</th>
-                  <th style={{padding:'8px 0'}}>이름</th>
-                  <th style={{padding:'8px 0'}}>사업자명</th>
-                  <th style={{padding:'8px 0'}}>사업자번호</th>
-                  <th style={{padding:'8px 0'}}>연락처</th>
-                  <th style={{padding:'8px 0'}}>주소</th>
-                  <th style={{padding:'8px 0'}}>허용여부</th>
-                  <th style={{padding:'8px 0'}}>접속권한</th>
+                  <th style={{width:51,padding:'8px 0',border:'1px solid #bcbcbc'}}><input type="checkbox" checked={true} readOnly /></th>
+                  <th style={{padding:'8px 0',border:'1px solid #bcbcbc'}}>계정</th>
+                  <th style={{padding:'8px 0',border:'1px solid #bcbcbc'}}>이름</th>
+                  <th style={{padding:'8px 0',border:'1px solid #bcbcbc'}}>사업자명</th>
+                  <th style={{padding:'8px 0',border:'1px solid #bcbcbc'}}>사업자번호</th>
+                  <th style={{padding:'8px 0',border:'1px solid #bcbcbc'}}>연락처</th>
+                  <th style={{padding:'8px 0',border:'1px solid #bcbcbc'}}>주소</th>
+                  <th style={{padding:'8px 0',border:'1px solid #bcbcbc'}}>허용여부</th>
+                  <th style={{padding:'8px 0',border:'1px solid #bcbcbc'}}>접속권한</th>
                 </tr>
               </thead>
               <tbody>
                 {ACCOUNT_ROWS.map((row, i) => (
-                  <tr key={row.login} style={{borderTop:'1.2px solid #bcbcbc',textAlign:'center',color:'#333'}}>
-                    <td><input type="checkbox" checked={i===0} readOnly /></td>
-                    <td>{row.login}</td>
-                    <td>{row.name}</td>
-                    <td>{row.company}</td>
-                    <td>{row.brn}</td>
-                    <td>{row.phone}</td>
-                    <td>{row.addr}</td>
-                    <td>{row.perm}</td>
-                    <td>{row.level}</td>
+                  <tr key={row.login} style={{textAlign:'center',color:'#333'}}>
+                    <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}><input type="checkbox" checked={i===0} readOnly /></td>
+                    <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{row.login}</td>
+                    <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{row.name}</td>
+                    <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{row.company}</td>
+                    <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{row.brn}</td>
+                    <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{row.phone}</td>
+                    <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{row.addr}</td>
+                    <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{row.perm}</td>
+                    <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{row.level}</td>
                   </tr>
                 ))}
               </tbody>
