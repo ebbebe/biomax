@@ -14,6 +14,8 @@ export interface OrderData {
   qty: string;
   memo: string;
   company: string;
+  address: string;
+  orderStatus: string;
 }
 
 export default function OrderCreateModal({ isOpen, onClose, onSubmit }: OrderCreateModalProps) {
@@ -23,6 +25,8 @@ export default function OrderCreateModal({ isOpen, onClose, onSubmit }: OrderCre
     qty: "",
     memo: "",
     company: "",
+    address: "",
+    orderStatus: "진행",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -203,6 +207,62 @@ export default function OrderCreateModal({ isOpen, onClose, onSubmit }: OrderCre
                 }}
                 required
               />
+            </div>
+
+            <div style={{ marginBottom: "15px" }}>
+              <label 
+                style={{ 
+                  display: "block", 
+                  marginBottom: "5px", 
+                  fontWeight: 500,
+                  fontSize: "15px"
+                }}
+              >
+                주소
+              </label>
+              <input
+                type="text"
+                name="address"
+                value={orderData.address}
+                onChange={handleChange}
+                placeholder="주소를 입력하세요"
+                style={{
+                  width: "100%",
+                  padding: "8px 12px",
+                  border: "1px solid #bcbcbc",
+                  borderRadius: "4px",
+                  fontSize: "15px",
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: "15px" }}>
+              <label 
+                style={{ 
+                  display: "block", 
+                  marginBottom: "5px", 
+                  fontWeight: 500,
+                  fontSize: "15px"
+                }}
+              >
+                주문상태
+              </label>
+              <select
+                name="orderStatus"
+                value={orderData.orderStatus}
+                onChange={handleChange}
+                style={{
+                  width: "100%",
+                  padding: "8px 12px",
+                  border: "1px solid #bcbcbc",
+                  borderRadius: "4px",
+                  fontSize: "15px",
+                }}
+                required
+              >
+                <option value="진행">진행</option>
+                <option value="완료">완료</option>
+              </select>
             </div>
 
             <div style={{ marginBottom: "15px" }}>

@@ -5,12 +5,12 @@ import { useState } from "react";
 import OrderCreateModal, { OrderData } from "../components/OrderCreateModal";
 
 // Demo data for each tab
-type TabType = "주문관리" | "계정관리" | "품목관리" | "화면관리";
+type TabType = "주문관리" | "계정관리" | "품목관리" | "주문확인";
 
 const TAB_LIST = [
   { label: "주문관리", icon: "📦" },
   { label: "품목관리", icon: "📋" },
-  { label: "화면관리", icon: "🖥️" },
+  { label: "주문확인", icon: "📃" },
   { label: "계정관리", icon: "🔑" },
 ];
 
@@ -22,6 +22,8 @@ const ORDER_ROWS = [
     memo: "빠른납기바랍니다.",
     regid: "1111",
     company: "주식회사 알에이디",
+    address: "서울시 강남구",
+    orderStatus: "진행",
   },
 ];
 
@@ -38,13 +40,17 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<TabType>("주문관리");
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const [orders, setOrders] = useState(ORDER_ROWS);
+  // 사용자 권한 상태 (실제 구현에서는 로그인 시 서버에서 받아온 권한 정보를 사용)
+  const [isAdmin, setIsAdmin] = useState(true); // 기본값을 true로 설정하여 관리자 메뉴 표시
 
-  // sidebar structure
+  // sidebar structure with role-based access
   const menu = [
-    { name: "주문관리", icon: "📦" },
-    { name: "품목관리", icon: "📋" },
-    { name: "화면관리", icon: "🖥️" },
-    { name: "계정관리", icon: "🔑" },
+    // 일반 사용자 메뉴
+    { name: "주문관리", icon: "📦", isAdminOnly: false },
+    { name: "품목관리", icon: "📋", isAdminOnly: false },
+    // 관리자 전용 메뉴
+    { name: "주문확인", icon: "📃", isAdminOnly: true },
+    { name: "계정관리", icon: "🔑", isAdminOnly: true },
   ];
 
   // table and UI depending on activeTab
@@ -91,6 +97,8 @@ export default function DashboardPage() {
                   <th style={{padding:'9px 0'}}>메모</th>
                   <th style={{padding:'9px 0'}}>등록아이디</th>
                   <th style={{padding:'9px 0'}}>사업자명</th>
+                  <th style={{padding:'9px 0'}}>주소</th>
+                  <th style={{padding:'9px 0'}}>주문상태</th>
                 </tr>
               </thead>
               <tbody>
@@ -103,6 +111,8 @@ export default function DashboardPage() {
                     <td>{o.memo}</td>
                     <td>{o.regid}</td>
                     <td>{o.company}</td>
+                    <td>{o.address}</td>
+                    <td>{o.orderStatus}</td>
                   </tr>
                 ))}
               </tbody>
@@ -244,78 +254,84 @@ export default function DashboardPage() {
   }
   // Sidebar menu items
   function renderSidebar() {
+    // 일반 메뉴와 관리자 메뉴 필터링
+    const userMenus = menu.filter(item => !item.isAdminOnly);
+    const adminMenus = menu.filter(item => item.isAdminOnly);
+    
+    // 메뉴 아이템 렌더링 함수
+    const renderMenuItem = (item: {name: string, icon: string, isAdminOnly: boolean}) => {
+      const isActive = activeTab === item.name;
+      
+      // 계정관리 메뉴는 특별한 스타일 적용
+      const isAccountMenu = item.name === "계정관리";
+      
+      return (
+        <li
+          key={item.name}
+          style={{
+            background: isActive 
+              ? (isAccountMenu ? "#3396ff" : "#c6dee9") 
+              : "transparent",
+            color: isActive 
+              ? (isAccountMenu ? "#fff" : "#1a5595") 
+              : "#222",
+            fontWeight: isActive && isAccountMenu ? 600 : 500,
+            padding: isAccountMenu ? "13px 22px 13px 22px" : "18px 22px 12px 22px",
+            fontSize: 18,
+            display: "flex",
+            alignItems: "center",
+            cursor: 'pointer',
+            marginTop: item === userMenus[0] || item === adminMenus[0] ? 0 : 5,
+            borderRadius: isAccountMenu ? 6 : 0,
+            border: isActive && isAccountMenu ? '1.5px solid #3396ff' : 'none',
+          }}
+          onClick={() => setActiveTab(item.name as TabType)}
+        >
+          <span 
+            style={{ 
+              fontSize: 21, 
+              marginRight: 10,
+              color: isAccountMenu ? '#ff2b2b' : 'inherit'
+            }}
+          >
+            {item.icon}
+          </span> 
+          {item.name}
+        </li>
+      );
+    };
+
     return (
       <>
+        {/* 일반 사용자 메뉴 섹션 */}
         <div style={{ background: "#1a5595", color: "#fff", padding: "14px 22px", fontWeight: 500, letterSpacing: 0.5, fontSize: 17, borderTopLeftRadius: 7 }}>
           <span style={{ fontSize: 19, marginRight: 9 }}>≡</span> 메인메뉴
         </div>
         <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-          <li
-            style={{
-              background: activeTab === "주문관리" ? "#c6dee9" : "transparent",
-              color: activeTab === "주문관리" ? "#1a5595" : "#222",
-              fontWeight: 500,
-              padding: "18px 22px 12px 22px",
-              fontSize: 18,
-              display: "flex",
-              alignItems: "center",
-              cursor:'pointer',
-            }}
-            onClick={()=>setActiveTab("주문관리")}
-          >
-            <span style={{ fontSize: 21, marginRight: 10 }}>📦</span> 주문관리
-          </li>
-          <li
-            style={{
-              background: activeTab === "품목관리" ? "#c6dee9" : "transparent",
-              color: activeTab === "품목관리" ? "#1a5595" : "#222",
-              fontWeight: 500,
-              padding: "18px 22px 12px 22px",
-              fontSize: 18,
-              display: "flex",
-              alignItems: "center",
-              cursor:'pointer',
-              marginTop: 5,
-            }}
-            onClick={()=>setActiveTab("품목관리")}
-          >
-            <span style={{ fontSize: 21, marginRight: 10 }}>📋</span> 품목관리
-          </li>
-          <li
-            style={{
-              background: activeTab === "화면관리" ? "#c6dee9" : "transparent",
-              color: activeTab === "화면관리" ? "#1a5595" : "#222",
-              fontWeight: 500,
-              padding: "18px 22px 12px 22px",
-              fontSize: 18,
-              display: "flex",
-              alignItems: "center",
-              cursor:'pointer',
-              marginTop: 5,
-            }}
-            onClick={()=>setActiveTab("화면관리")}
-          >
-            <span style={{ fontSize: 21, marginRight: 10 }}>🖥️</span> 화면관리
-          </li>
-          <li
-            style={{
-              background: activeTab === "계정관리" ? "#3396ff" : "transparent",
-              color: activeTab === "계정관리" ? "#fff" : "#222",
-              fontWeight: activeTab === "계정관리" ? 600 : 500,
-              padding: "13px 22px 13px 22px",
-              fontSize: 18,
-              display: "flex",
-              alignItems: "center",
-              marginTop: 9,
-              borderRadius: 6,
-              cursor:'pointer',
-              border: activeTab === "계정관리" ? '1.5px solid #3396ff':'none',
-            }}
-            onClick={()=>setActiveTab("계정관리")}
-          >
-            <span style={{ fontSize: 21, marginRight: 10, color:'#ff2b2b' }}>🔑</span> 계정관리
-          </li>
+          {userMenus.map(renderMenuItem)}
         </ul>
+        
+        {/* 관리자 메뉴 섹션 - 관리자일 때만 표시 */}
+        {isAdmin && (
+          <>
+            <div style={{ 
+              background: "#1a5595", 
+              color: "#fff", 
+              padding: "14px 22px", 
+              fontWeight: 500, 
+              letterSpacing: 0.5, 
+              fontSize: 17,
+              marginTop: 20,
+              display: 'flex',
+              alignItems: 'center'
+            }}>
+              <span style={{ fontSize: 19, marginRight: 9 }}>⚙️</span> 관리자 메뉴
+            </div>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+              {adminMenus.map(renderMenuItem)}
+            </ul>
+          </>
+        )}
       </>
     );
   }
@@ -353,6 +369,24 @@ export default function DashboardPage() {
         <div style={{ width: 250, background: "#fff", borderRight: "1px solid #c6dee9", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
           <div>{renderSidebar()}</div>
           <div style={{ padding: "0 25px 18px 25px" }}>
+            {/* 관리자 모드 토글 버튼 (개발용) */}
+            <div style={{ marginBottom: 15, display: 'flex', alignItems: 'center' }}>
+              <label style={{ fontSize: 14, marginRight: 8, color: '#666' }}>관리자 모드:</label>
+              <button 
+                onClick={() => setIsAdmin(!isAdmin)}
+                style={{
+                  background: isAdmin ? '#1a5595' : '#ccc',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: 4,
+                  padding: '4px 8px',
+                  fontSize: 12,
+                  cursor: 'pointer'
+                }}
+              >
+                {isAdmin ? '활성화됨' : '비활성화됨'}
+              </button>
+            </div>
             <Image src="https://ext.same-assets.com/1304735728/1117858943.png" alt="BIOMAX Logo" width={80} height={32} />
           </div>
         </div>
