@@ -58,6 +58,7 @@ export default function OrderCreateModal({ isOpen, onClose, onSubmit }: OrderCre
         justifyContent: "center",
         zIndex: 1000,
       }}
+      onClick={onClose}
     >
       <div 
         style={{
@@ -67,6 +68,7 @@ export default function OrderCreateModal({ isOpen, onClose, onSubmit }: OrderCre
           boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
           overflow: "hidden",
         }}
+        onClick={(e) => e.stopPropagation()}
       >
         {/* 헤더 */}
         <div style={{ 
