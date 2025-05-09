@@ -43,6 +43,17 @@ export default function AccountCreateModal({
     linkedProducts: [],
   });
   
+  // 유효성 검사 오류 상태 관리
+  const [errors, setErrors] = useState<{
+    login?: string;
+    password?: string;
+    name?: string;
+    company?: string;
+    brn?: string;
+    phone?: string;
+    addr?: string;
+  }>({});
+  
   // 품목 연결 관리
   const [productSearchTerm, setProductSearchTerm] = useState<string>("");
   
@@ -135,11 +146,83 @@ export default function AccountCreateModal({
         [name]: value,
       });
     }
+    
+    // 해당 필드의 오류 메시지 초기화
+    if (errors[name as keyof typeof errors]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: undefined
+      }));
+    }
+  };
+
+  // 폼 제출 전 유효성 검사
+  const validateForm = (): boolean => {
+    const newErrors: {
+      login?: string;
+      password?: string;
+      name?: string;
+      company?: string;
+      brn?: string;
+      phone?: string;
+      addr?: string;
+    } = {};
+    
+    // 로그인 ID 검사
+    if (!accountData.login) {
+      newErrors.login = "로그인 ID를 입력해주세요";
+    } else if (accountData.login.length < 3) {
+      newErrors.login = "로그인 ID는 3자 이상이어야 합니다";
+    }
+    
+    // 비밀번호 검사
+    if (!accountData.password) {
+      newErrors.password = "비밀번호를 입력해주세요";
+    } else if (accountData.password.length < 6) {
+      newErrors.password = "비밀번호는 6자 이상이어야 합니다";
+    }
+    
+    // 이름 검사
+    if (!accountData.name) {
+      newErrors.name = "이름을 입력해주세요";
+    }
+    
+    // 회사명 검사
+    if (!accountData.company) {
+      newErrors.company = "회사명을 입력해주세요";
+    }
+    
+    // 사업자번호 검사
+    if (!accountData.brn) {
+      newErrors.brn = "사업자번호를 입력해주세요";
+    } else if (!/^\d{3}-\d{2}-\d{5}$/.test(accountData.brn) && accountData.brn !== "3(권한)") {
+      newErrors.brn = "사업자번호 형식을 확인해주세요 (xxx-xx-xxxxx)";
+    }
+    
+    // 전화번호 검사
+    if (accountData.phone && !/^\d{2,3}-\d{3,4}-\d{4}$/.test(accountData.phone)) {
+      newErrors.phone = "전화번호 형식을 확인해주세요 (xxx-xxxx-xxxx)";
+    }
+    
+    // 주소 검사
+    if (!accountData.addr) {
+      newErrors.addr = "주소를 입력해주세요";
+    }
+    
+    // 오류 상태 업데이트
+    setErrors(newErrors);
+    
+    // 오류가 없으면 true 반환
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(accountData);
+    
+    // 유효성 검사 실행
+    if (validateForm()) {
+      onSave(accountData);
+    }
   };
 
   return (
@@ -207,18 +290,24 @@ export default function AccountCreateModal({
                 </label>
                 <input
                   type="text"
+                  id="login"
                   name="login"
                   value={accountData.login}
                   onChange={handleChange}
                   style={{
                     width: "100%",
                     padding: "8px 12px",
-                    border: "1px solid #bcbcbc",
+                    border: errors.login ? "1px solid #f44336" : "1px solid #bcbcbc",
                     borderRadius: "4px",
                     fontSize: "15px",
                   }}
                   required
                 />
+                {errors.login && (
+                  <div style={{ color: "#f44336", fontSize: "12px", marginTop: "5px" }}>
+                    {errors.login}
+                  </div>
+                )}
               </div>
 
               <div>
@@ -234,18 +323,24 @@ export default function AccountCreateModal({
                 </label>
                 <input
                   type="password"
+                  id="password"
                   name="password"
                   value={accountData.password}
                   onChange={handleChange}
                   style={{
                     width: "100%",
                     padding: "8px 12px",
-                    border: "1px solid #bcbcbc",
+                    border: errors.password ? "1px solid #f44336" : "1px solid #bcbcbc",
                     borderRadius: "4px",
                     fontSize: "15px",
                   }}
                   required
                 />
+                {errors.password && (
+                  <div style={{ color: "#f44336", fontSize: "12px", marginTop: "5px" }}>
+                    {errors.password}
+                  </div>
+                )}
               </div>
 
               <div>
@@ -267,7 +362,7 @@ export default function AccountCreateModal({
                   style={{
                     width: "100%",
                     padding: "8px 12px",
-                    border: "1px solid #bcbcbc",
+                    border: errors.name ? "1px solid #f44336" : "1px solid #bcbcbc",
                     borderRadius: "4px",
                     fontSize: "15px",
                   }}
@@ -294,7 +389,7 @@ export default function AccountCreateModal({
                   style={{
                     width: "100%",
                     padding: "8px 12px",
-                    border: "1px solid #bcbcbc",
+                    border: errors.company ? "1px solid #f44336" : "1px solid #bcbcbc",
                     borderRadius: "4px",
                     fontSize: "15px",
                   }}
@@ -318,16 +413,21 @@ export default function AccountCreateModal({
                   name="brn"
                   value={accountData.brn}
                   onChange={handleChange}
+                  placeholder="000-00-00000"
                   style={{
                     width: "100%",
                     padding: "8px 12px",
-                    border: "1px solid #bcbcbc",
+                    border: errors.brn ? "1px solid #f44336" : "1px solid #bcbcbc",
                     borderRadius: "4px",
                     fontSize: "15px",
                   }}
-                  placeholder="000-00-00000"
                   required
                 />
+                {errors.brn && (
+                  <div style={{ color: "#f44336", fontSize: "13px", marginTop: "5px" }}>
+                    {errors.brn}
+                  </div>
+                )}
               </div>
 
               <div>
@@ -346,16 +446,20 @@ export default function AccountCreateModal({
                   name="phone"
                   value={accountData.phone}
                   onChange={handleChange}
+                  placeholder="000-0000-0000"
                   style={{
                     width: "100%",
                     padding: "8px 12px",
-                    border: "1px solid #bcbcbc",
+                    border: errors.phone ? "1px solid #f44336" : "1px solid #bcbcbc",
                     borderRadius: "4px",
                     fontSize: "15px",
                   }}
-                  placeholder="000-0000-0000"
-                  required
                 />
+                {errors.phone && (
+                  <div style={{ color: "#f44336", fontSize: "13px", marginTop: "5px" }}>
+                    {errors.phone}
+                  </div>
+                )}
               </div>
 
               {/* 담당자 필드 제거 */}

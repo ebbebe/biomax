@@ -66,7 +66,6 @@ export default function AccountManagement({ accounts, setAccounts, products = []
             <tr style={{background:'#f4f5f5',borderBottom:'2.5px solid #1976d2',color:'#1a5595'}}>
               <th style={{width:51,padding:'8px 0',border:'1px solid #bcbcbc'}}><input type="checkbox" checked={true} readOnly /></th>
               <th style={{padding:'8px 0',border:'1px solid #bcbcbc'}}>계정</th>
-              <th style={{padding:'8px 0',border:'1px solid #bcbcbc'}}>비밀번호</th>
               <th style={{padding:'8px 0',border:'1px solid #bcbcbc'}}>이름</th>
               <th style={{padding:'8px 0',border:'1px solid #bcbcbc'}}>사업자명</th>
               <th style={{padding:'8px 0',border:'1px solid #bcbcbc'}}>사업자번호</th>
@@ -81,7 +80,6 @@ export default function AccountManagement({ accounts, setAccounts, products = []
               <tr key={row.login} style={{textAlign:'center',color:'#333'}}>
                 <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}><input type="checkbox" checked={i===0} readOnly /></td>
                 <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{row.login}</td>
-                <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{row.password ? '••••••••' : '-'}</td>
                 <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{row.name}</td>
                 <td 
                   style={{

@@ -31,17 +31,100 @@ export default function OrderCreateModal({ isOpen, onClose, onSubmit }: OrderCre
     status: "대기중", // 기본값을 '대기중'로 설정
   });
 
+  // 유효성 검사 오류 상태 관리
+  const [errors, setErrors] = useState<{
+    productName?: string;
+    quantity?: string;
+    companyName?: string;
+    address?: string;
+  }>({});
+
+  // 입력값 변경 처리
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+    
+    // 입력값 업데이트
     setOrderData((prev) => ({
       ...prev,
       [name]: value,
     }));
+    
+    // 해당 필드의 오류 메시지 초기화
+    if (errors[name as keyof typeof errors]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: undefined
+      }));
+    }
   };
 
+  // 수량 입력 필드에 숫자와 쉼표만 허용하는 처리
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = e.target;
+    // 숫자와 쉼표만 허용
+    const sanitizedValue = value.replace(/[^0-9,]/g, '');
+    
+    // 입력값 업데이트
+    setOrderData(prev => ({
+      ...prev,
+      quantity: sanitizedValue
+    }));
+    
+    // 오류 메시지 초기화
+    if (errors.quantity) {
+      setErrors(prev => ({
+        ...prev,
+        quantity: undefined
+      }));
+    }
+  };
+
+  // 폼 제출 전 유효성 검사
+  const validateForm = (): boolean => {
+    const newErrors: {
+      productName?: string;
+      quantity?: string;
+      companyName?: string;
+      address?: string;
+    } = {};
+    
+    // 제품명 검사
+    if (!orderData.productName) {
+      newErrors.productName = "제품을 선택해주세요";
+    }
+    
+    // 수량 검사
+    if (!orderData.quantity) {
+      newErrors.quantity = "수량을 입력해주세요";
+    } else if (!/^[0-9,]+$/.test(orderData.quantity)) {
+      newErrors.quantity = "수량은 숫자만 입력 가능합니다";
+    }
+    
+    // 회사명 검사
+    if (!orderData.companyName) {
+      newErrors.companyName = "회사명을 입력해주세요";
+    }
+    
+    // 주소 검사
+    if (!orderData.address) {
+      newErrors.address = "주소를 입력해주세요";
+    }
+    
+    // 오류 상태 업데이트
+    setErrors(newErrors);
+    
+    // 오류가 없으면 true 반환
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // 폼 제출 처리
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(orderData);
+    
+    // 유효성 검사 실행
+    if (validateForm()) {
+      onSubmit(orderData);
+    }
   };
 
   if (!isOpen) return null;
@@ -144,7 +227,7 @@ export default function OrderCreateModal({ isOpen, onClose, onSubmit }: OrderCre
                 style={{
                   width: "100%",
                   padding: "8px 12px",
-                  border: "1px solid #bcbcbc",
+                  border: errors.productName ? "1px solid #f44336" : "1px solid #bcbcbc",
                   borderRadius: "4px",
                   fontSize: "15px",
                 }}
@@ -155,6 +238,11 @@ export default function OrderCreateModal({ isOpen, onClose, onSubmit }: OrderCre
                 <option value="바이오맥스 (L)">바이오맥스 (L)</option>
                 <option value="바이오스타 (kg)">바이오스타 (kg)</option>
               </select>
+              {errors.productName && (
+                <div style={{ color: "#f44336", fontSize: "13px", marginTop: "5px" }}>
+                  {errors.productName}
+                </div>
+              )}
             </div>
 
             <div style={{ marginBottom: "15px" }}>
@@ -172,12 +260,12 @@ export default function OrderCreateModal({ isOpen, onClose, onSubmit }: OrderCre
                 type="text"
                 name="quantity"
                 value={orderData.quantity}
-                onChange={handleChange}
+                onChange={handleQuantityChange}
                 placeholder="수량을 입력하세요"
                 style={{
                   width: "100%",
                   padding: "8px 12px",
-                  border: "1px solid #bcbcbc",
+                  border: errors.quantity ? "1px solid #f44336" : "1px solid #bcbcbc",
                   borderRadius: "4px",
                   fontSize: "15px",
                 }}
@@ -205,7 +293,7 @@ export default function OrderCreateModal({ isOpen, onClose, onSubmit }: OrderCre
                 style={{
                   width: "100%",
                   padding: "8px 12px",
-                  border: "1px solid #bcbcbc",
+                  border: errors.companyName ? "1px solid #f44336" : "1px solid #bcbcbc",
                   borderRadius: "4px",
                   fontSize: "15px",
                 }}
@@ -233,11 +321,17 @@ export default function OrderCreateModal({ isOpen, onClose, onSubmit }: OrderCre
                 style={{
                   width: "100%",
                   padding: "8px 12px",
-                  border: "1px solid #bcbcbc",
+                  border: errors.address ? "1px solid #f44336" : "1px solid #bcbcbc",
                   borderRadius: "4px",
                   fontSize: "15px",
                 }}
+                required
               />
+              {errors.address && (
+                <div style={{ color: "#f44336", fontSize: "13px", marginTop: "5px" }}>
+                  {errors.address}
+                </div>
+              )}
             </div>
 
             {/* 주문상태 필드 제거 - 기본값은 '대기'로 설정되며 관리자가 주문확인에서 처리 */}
