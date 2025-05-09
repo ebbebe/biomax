@@ -25,6 +25,15 @@ export default function ProductManagement({ products, setProducts, companies }: 
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
   const [isCompanyModalOpen, setIsCompanyModalOpen] = useState(false);
   const [selectedCompanyFilter, setSelectedCompanyFilter] = useState<string>("");
+  const [showLinkedCompaniesModal, setShowLinkedCompaniesModal] = useState(false);
+  const [viewingLinkedCompanies, setViewingLinkedCompanies] = useState<string[]>([]);
+  const [viewingProductName, setViewingProductName] = useState<string>("");
+  const [companySearchTerm, setCompanySearchTerm] = useState<string>("");
+  
+  // 검색어에 따라 필터링된 거래처 목록
+  const filteredLinkedCompanies = viewingLinkedCompanies.filter(company => 
+    company.toLowerCase().includes(companySearchTerm.toLowerCase())
+  );
 
   return (
     <>
@@ -64,7 +73,6 @@ export default function ProductManagement({ products, setProducts, companies }: 
               <th style={{padding:'8px 0',border:'1px solid #bcbcbc'}}>재고</th>
               <th style={{padding:'8px 0',border:'1px solid #bcbcbc'}}>카테고리</th>
               <th style={{padding:'8px 0',border:'1px solid #bcbcbc'}}>연결된 거래처</th>
-              <th style={{padding:'8px 0',width:120,border:'1px solid #bcbcbc'}}>거래처 연결</th>
             </tr>
           </thead>
           <tbody>
@@ -84,45 +92,28 @@ export default function ProductManagement({ products, setProducts, companies }: 
                 <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{product.stock}</td>
                 <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{product.category}</td>
                 <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>
-                  {product.linkedCompanies.length > 0 ? (
-                    <div style={{display:'flex',flexWrap:'wrap',justifyContent:'center',gap:5}}>
-                      {product.linkedCompanies.map(company => (
-                        <span 
-                          key={company} 
-                          style={{
-                            background:'#e3f2fd',
-                            color:'#1976d2',
-                            padding:'2px 8px',
-                            borderRadius:4,
-                            fontSize:14,
-                            display:'inline-block'
-                          }}
-                        >
-                          {company}
-                        </span>
-                      ))}
-                    </div>
-                  ) : (
-                    <span style={{color:'#888'}}>연결된 거래처 없음</span>
-                  )}
-                </td>
-                <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>
-                  <button 
+                  <button
                     onClick={() => {
                       setSelectedProduct(product.id);
-                      setIsCompanyModalOpen(true);
+                      setViewingLinkedCompanies(product.linkedCompanies);
+                      setViewingProductName(product.name);
+                      setShowLinkedCompaniesModal(true);
+                      setCompanySearchTerm("");
                     }}
                     style={{
-                      background:'#1a5595',
-                      color:'white',
-                      border:'none',
-                      borderRadius:4,
+                      background: product.linkedCompanies.length > 0 ? '#e3f2fd' : '#1a5595',
+                      color: product.linkedCompanies.length > 0 ? '#1976d2' : 'white',
                       padding:'4px 10px',
+                      borderRadius:4,
                       fontSize:14,
-                      cursor:'pointer'
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontWeight: 500
                     }}
                   >
-                    거래처 연결
+                    {product.linkedCompanies.length > 0 
+                      ? `${product.linkedCompanies.length}개 거래처 연결됨` 
+                      : '거래처 연결하기'}
                   </button>
                 </td>
               </tr>
@@ -142,8 +133,10 @@ export default function ProductManagement({ products, setProducts, companies }: 
         </div>
       </div>
       
-      {/* 거래처 연결 모달 */}
-      {isCompanyModalOpen && selectedProduct && (
+      {/* 거래처 연결 모달 - 통합되어 삭제됨 */}
+
+      {/* 연결된 거래처 목록 모달 */}
+      {showLinkedCompaniesModal && (
         <div 
           style={{
             position: "fixed",
@@ -157,15 +150,18 @@ export default function ProductManagement({ products, setProducts, companies }: 
             justifyContent: "center",
             zIndex: 1000,
           }}
-          onClick={() => setIsCompanyModalOpen(false)}
+          onClick={() => setShowLinkedCompaniesModal(false)}
         >
           <div 
             style={{
               backgroundColor: "#fff",
               borderRadius: "8px",
-              width: "400px",
+              width: "500px",
               boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
               overflow: "hidden",
+              maxHeight: "80vh",
+              display: "flex",
+              flexDirection: "column"
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -180,10 +176,10 @@ export default function ProductManagement({ products, setProducts, companies }: 
               fontSize: 17,
               fontWeight: 500
             }}>
-              <span>거래처 연결 관리</span>
+              <span>연결된 거래처 목록</span>
               <span style={{ flex: 1 }} />
               <span 
-                onClick={() => setIsCompanyModalOpen(false)} 
+                onClick={() => setShowLinkedCompaniesModal(false)} 
                 style={{ 
                   cursor: 'pointer', 
                   fontSize: 20 
@@ -193,72 +189,184 @@ export default function ProductManagement({ products, setProducts, companies }: 
               </span>
             </div>
             
-            {/* 내용 */}
-            <div style={{ padding: "20px" }}>
-              <div style={{ marginBottom: "15px" }}>
-                <div style={{ fontWeight: 500, marginBottom: 10 }}>
-                  제품: {products.find(p => p.id === selectedProduct)?.name}
-                </div>
-                
-                <div style={{ marginTop: 15, marginBottom: 10, fontWeight: 500 }}>
-                  연결할 거래처 선택:
-                </div>
-                
-                <div style={{ maxHeight: "200px", overflowY: "auto", border: "1px solid #ddd", borderRadius: 4, padding: 10 }}>
-                  {companies.map(company => {
-                    const selectedProductObj = products.find(p => p.id === selectedProduct);
-                    const isLinked = selectedProductObj?.linkedCompanies.includes(company.name);
-                    
-                    return (
-                      <div key={company.id} style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
-                        <input 
-                          type="checkbox" 
-                          id={`company-${company.id}`}
-                          checked={isLinked}
-                          onChange={() => {
-                            const updatedProducts = products.map(p => {
-                              if (p.id === selectedProduct) {
-                                if (isLinked) {
-                                  // 연결 해제
-                                  return {
-                                    ...p,
-                                    linkedCompanies: p.linkedCompanies.filter(c => c !== company.name)
-                                  };
-                                } else {
-                                  // 연결 추가
-                                  return {
-                                    ...p,
-                                    linkedCompanies: [...p.linkedCompanies, company.name]
-                                  };
-                                }
-                              }
-                              return p;
-                            });
-                            setProducts(updatedProducts);
-                          }}
-                          style={{ marginRight: 10 }}
-                        />
-                        <label htmlFor={`company-${company.id}`}>{company.name}</label>
-                      </div>
-                    );
-                  })}
-                </div>
+            {/* 검색 영역 */}
+            <div style={{ padding: "15px 20px 10px", borderBottom: "1px solid #eee" }}>
+              <div style={{ marginBottom: "10px", fontWeight: 500 }}>
+                제품: {viewingProductName}
               </div>
+              <div style={{ marginBottom: "5px", fontWeight: 500 }}>
+                거래처 연결 관리 ({viewingLinkedCompanies.length}개 연결됨){companySearchTerm ? ` / 검색 결과: ${filteredLinkedCompanies.length}개` : ""}
+              </div>
+              <input 
+                type="text" 
+                placeholder="거래처 검색..."
+                value={companySearchTerm}
+                onChange={(e) => setCompanySearchTerm(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "8px 12px",
+                  border: "1px solid #ddd",
+                  borderRadius: "4px",
+                  fontSize: "14px",
+                  boxSizing: "border-box"
+                }}
+              />
+            </div>
+            
+            {/* 거래처 목록 */}
+            <div style={{ 
+              padding: "0 20px", 
+              overflowY: "auto", 
+              flex: 1,
+              maxHeight: "300px"
+            }}>
+              <table style={{
+                width: "100%",
+                borderCollapse: "collapse",
+                marginTop: "10px"
+              }}>
+                <thead>
+                  <tr style={{ borderBottom: "1px solid #eee" }}>
+                    <th style={{ 
+                      width: "40px",
+                      textAlign: "center", 
+                      padding: "10px 5px", 
+                      fontWeight: 500,
+                      color: "#555",
+                      position: "sticky",
+                      top: 0,
+                      background: "white",
+                      zIndex: 1
+                    }}>
+                      연결
+                    </th>
+                    <th style={{ 
+                      textAlign: "left", 
+                      padding: "10px 5px", 
+                      fontWeight: 500,
+                      color: "#555",
+                      position: "sticky",
+                      top: 0,
+                      background: "white",
+                      zIndex: 1
+                    }}>
+                      거래처명
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {companySearchTerm === "" ? (
+                    // 검색어가 없을 때는 모든 거래처 표시
+                    companies.map(company => {
+                      const isLinked = viewingLinkedCompanies.includes(company.name);
+                      return (
+                        <tr key={company.id} style={{ borderBottom: "1px solid #f5f5f5" }}>
+                          <td style={{ padding: "10px 5px", textAlign: "center" }}>
+                            <input 
+                              type="checkbox" 
+                              checked={isLinked}
+                              onChange={() => {
+                                if (selectedProduct) {
+                                  const updatedProducts = products.map(p => {
+                                    if (p.id === selectedProduct) {
+                                      if (isLinked) {
+                                        // 연결 해제
+                                        const newLinkedCompanies = p.linkedCompanies.filter(c => c !== company.name);
+                                        setViewingLinkedCompanies(newLinkedCompanies);
+                                        return {
+                                          ...p,
+                                          linkedCompanies: newLinkedCompanies
+                                        };
+                                      } else {
+                                        // 연결 추가
+                                        const newLinkedCompanies = [...p.linkedCompanies, company.name];
+                                        setViewingLinkedCompanies(newLinkedCompanies);
+                                        return {
+                                          ...p,
+                                          linkedCompanies: newLinkedCompanies
+                                        };
+                                      }
+                                    }
+                                    return p;
+                                  });
+                                  setProducts(updatedProducts);
+                                }
+                              }}
+                            />
+                          </td>
+                          <td style={{ padding: "10px 5px" }}>{company.name}</td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    // 검색어가 있을 때는 필터링된 거래처만 표시
+                    companies
+                      .filter(company => company.name.toLowerCase().includes(companySearchTerm.toLowerCase()))
+                      .map(company => {
+                        const isLinked = viewingLinkedCompanies.includes(company.name);
+                        return (
+                          <tr key={company.id} style={{ borderBottom: "1px solid #f5f5f5" }}>
+                            <td style={{ padding: "10px 5px", textAlign: "center" }}>
+                              <input 
+                                type="checkbox" 
+                                checked={isLinked}
+                                onChange={() => {
+                                  if (selectedProduct) {
+                                    const updatedProducts = products.map(p => {
+                                      if (p.id === selectedProduct) {
+                                        if (isLinked) {
+                                          // 연결 해제
+                                          const newLinkedCompanies = p.linkedCompanies.filter(c => c !== company.name);
+                                          setViewingLinkedCompanies(newLinkedCompanies);
+                                          return {
+                                            ...p,
+                                            linkedCompanies: newLinkedCompanies
+                                          };
+                                        } else {
+                                          // 연결 추가
+                                          const newLinkedCompanies = [...p.linkedCompanies, company.name];
+                                          setViewingLinkedCompanies(newLinkedCompanies);
+                                          return {
+                                            ...p,
+                                            linkedCompanies: newLinkedCompanies
+                                          };
+                                        }
+                                      }
+                                      return p;
+                                    });
+                                    setProducts(updatedProducts);
+                                  }
+                                }}
+                              />
+                            </td>
+                            <td style={{ padding: "10px 5px" }}>{company.name}</td>
+                          </tr>
+                        );
+                      })
+                  )}
+                  {companySearchTerm !== "" && companies.filter(company => 
+                    company.name.toLowerCase().includes(companySearchTerm.toLowerCase())
+                  ).length === 0 && (
+                    <tr>
+                      <td colSpan={2} style={{ padding: "20px 5px", textAlign: "center", color: "#888" }}>
+                        검색 결과가 없습니다.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
             
             {/* 버튼 영역 */}
-            <div 
-              style={{ 
-                padding: "15px 20px", 
-                borderTop: "1px solid #c6dee9",
-                display: "flex",
-                justifyContent: "flex-end",
-                gap: "10px",
-                background: "#f4f5f5"
-              }}
-            >
+            <div style={{ 
+              padding: "15px 20px", 
+              borderTop: "1px solid #eee",
+              display: "flex",
+              justifyContent: "flex-end",
+              background: "#f9f9f9"
+            }}>
               <button
-                onClick={() => setIsCompanyModalOpen(false)}
+                onClick={() => setShowLinkedCompaniesModal(false)}
                 style={{
                   padding: "8px 16px",
                   backgroundColor: "#1a5595",
@@ -270,7 +378,7 @@ export default function ProductManagement({ products, setProducts, companies }: 
                   fontWeight: 500,
                 }}
               >
-                확인
+                닫기
               </button>
             </div>
           </div>
