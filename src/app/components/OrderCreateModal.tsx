@@ -26,7 +26,7 @@ export default function OrderCreateModal({ isOpen, onClose, onSubmit }: OrderCre
     memo: "",
     company: "",
     address: "",
-    orderStatus: "진행",
+    orderStatus: "대기", // 기본값을 '대기'로 설정
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -238,34 +238,7 @@ export default function OrderCreateModal({ isOpen, onClose, onSubmit }: OrderCre
               />
             </div>
 
-            <div style={{ marginBottom: "15px" }}>
-              <label 
-                style={{ 
-                  display: "block", 
-                  marginBottom: "5px", 
-                  fontWeight: 500,
-                  fontSize: "15px"
-                }}
-              >
-                주문상태
-              </label>
-              <select
-                name="orderStatus"
-                value={orderData.orderStatus}
-                onChange={handleChange}
-                style={{
-                  width: "100%",
-                  padding: "8px 12px",
-                  border: "1px solid #bcbcbc",
-                  borderRadius: "4px",
-                  fontSize: "15px",
-                }}
-                required
-              >
-                <option value="진행">진행</option>
-                <option value="완료">완료</option>
-              </select>
-            </div>
+            {/* 주문상태 필드 제거 - 기본값은 '대기'로 설정되며 관리자가 주문확인에서 처리 */}
 
             <div style={{ marginBottom: "15px" }}>
               <label 

@@ -83,7 +83,8 @@ export default function DashboardPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>("주문등록");
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
-  const [orders, setOrders] = useState(ORDER_ROWS);
+  // 주문 데이터 상태 관리
+  const [orders, setOrders] = useState<Array<OrderData & { regid: string }>>(ORDER_ROWS);
   // 사용자 권한 상태 (실제 구현에서는 로그인 시 서버에서 받아온 권한 정보를 사용)
   const [isAdmin, setIsAdmin] = useState(true); // 기본값을 true로 설정하여 관리자 메뉴 표시
   
@@ -112,7 +113,7 @@ export default function DashboardPage() {
     }
     
     if (activeTab === "주문확인") {
-      return <OrderConfirmation orders={orders} />;
+      return <OrderConfirmation orders={orders} setOrders={setOrders} />;
     }
     
     if (activeTab === "계정관리") {
