@@ -1,13 +1,22 @@
 "use client";
 
+import { useState } from "react";
 import { OrderData } from "./OrderCreateModal";
+import CompanyDetailModal from "./CompanyDetailModal";
 
 interface OrderConfirmationProps {
   orders: Array<OrderData & { regid: string }>;
   setOrders?: React.Dispatch<React.SetStateAction<Array<OrderData & { regid: string }>>>;
+  companies: Array<{
+    id: string;
+    name: string;
+    businessNumber: string;
+    address: string;
+    phone: string;
+  }>;
 }
 
-export default function OrderConfirmation({ orders, setOrders }: OrderConfirmationProps) {
+export default function OrderConfirmation({ orders, setOrders, companies }: OrderConfirmationProps) {
   // 주문상태 변경 함수
   const handleStatusChange = (orderId: string, newStatus: string) => {
     if (!setOrders) return;
@@ -17,6 +26,22 @@ export default function OrderConfirmation({ orders, setOrders }: OrderConfirmati
         order.regid === orderId ? { ...order, orderStatus: newStatus } : order
       )
     );
+  };
+
+  const [selectedCompany, setSelectedCompany] = useState<{
+    id: string;
+    name: string;
+    businessNumber: string;
+    address: string;
+    phone: string;
+  } | null>(null);
+
+  // 사업자명 클릭 시 상세 정보 모달 표시
+  const handleCompanyClick = (companyName: string) => {
+    const company = companies.find(c => c.name === companyName);
+    if (company) {
+      setSelectedCompany(company);
+    }
   };
   return (
     <>
@@ -68,7 +93,19 @@ export default function OrderConfirmation({ orders, setOrders }: OrderConfirmati
                 <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{o.qty}</td>
                 <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{o.memo}</td>
                 <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{o.regid}</td>
-                <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{o.company}</td>
+                <td 
+                  style={{
+                    border:'1px solid #bcbcbc',
+                    padding:'6px 0',
+                    cursor: 'pointer',
+                    textDecoration: 'underline',
+                    color: '#1976d2'
+                  }}
+                  onClick={() => handleCompanyClick(o.company)}
+                  title="거래처 상세 정보 보기"
+                >
+                  {o.company}
+                </td>
                 <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{o.address}</td>
                 <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>
                   <span style={{
@@ -135,6 +172,14 @@ export default function OrderConfirmation({ orders, setOrders }: OrderConfirmati
           </select>
         </div>
       </div>
+
+      {/* 거래처 상세 정보 모달 */}
+      {selectedCompany && (
+        <CompanyDetailModal 
+          company={selectedCompany} 
+          onClose={() => setSelectedCompany(null)} 
+        />
+      )}
     </>
   );
 }

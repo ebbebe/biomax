@@ -6,9 +6,17 @@ interface OrderManagementProps {
   orders: Array<OrderData & { regid: string }>;
   setOrders: React.Dispatch<React.SetStateAction<Array<OrderData & { regid: string }>>>;
   setIsOrderModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  companies?: Array<{
+    id: string;
+    name: string;
+    businessNumber: string;
+    address: string;
+    phone: string;
+  }>;
 }
 
 export default function OrderManagement({ orders, setOrders, setIsOrderModalOpen }: OrderManagementProps) {
+
   return (
     <>
       {/* Toolbar, Filters, Table */}
@@ -100,6 +108,7 @@ export default function OrderManagement({ orders, setOrders, setIsOrderModalOpen
           </select>
         </div>
       </div>
+      {/* 주문관리에서는 거래처 상세 정보 모달이 필요하지 않음 */}
     </>
   );
 }
