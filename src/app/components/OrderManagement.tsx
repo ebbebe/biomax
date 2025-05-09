@@ -3,8 +3,8 @@
 import { OrderData } from "./OrderCreateModal";
 
 interface OrderManagementProps {
-  orders: Array<OrderData & { regid: string }>;
-  setOrders: React.Dispatch<React.SetStateAction<Array<OrderData & { regid: string }>>>;
+  orders: Array<OrderData>;
+  setOrders: React.Dispatch<React.SetStateAction<Array<OrderData>>>;
   setIsOrderModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
   companies?: Array<{
     id: string;
@@ -42,7 +42,7 @@ export default function OrderManagement({ orders, setOrders, setIsOrderModalOpen
         <input style={{border:'1px solid #bcbcbc',borderRadius:4,padding:'5px 9px',fontSize:15,width:112}} placeholder="등록아이디" />
         <select style={{border:'1px solid #bcbcbc',borderRadius:4,padding:'5px 11px',fontSize:15,minWidth:70,marginLeft:7}} defaultValue="전체">
           <option value="전체">전체</option>
-          <option value="대기">대기</option>
+          <option value="대기중">대기중</option>
           <option value="진행">진행</option>
           <option value="완료">완료</option>
         </select>
@@ -65,14 +65,14 @@ export default function OrderManagement({ orders, setOrders, setIsOrderModalOpen
           </thead>
           <tbody>
             {orders.map((o, i) => (
-              <tr key={o.regid} style={{textAlign:'center',color:'#333'}}>
+              <tr key={o.id} style={{textAlign:'center',color:'#333'}}>
                 <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}><input type="checkbox" checked={i===0} readOnly /></td>
                 <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{o.date}</td>
-                <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{o.product}</td>
-                <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{o.qty}</td>
+                <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{o.productName}</td>
+                <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{o.quantity}</td>
                 <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{o.memo}</td>
-                <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{o.regid}</td>
-                <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{o.company}</td>
+                <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{o.userId}</td>
+                <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{o.companyName}</td>
                 <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{o.address}</td>
                 <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>
                   <span style={{
@@ -81,15 +81,15 @@ export default function OrderManagement({ orders, setOrders, setIsOrderModalOpen
                     borderRadius: '4px',
                     fontSize: '14px',
                     backgroundColor: 
-                      o.orderStatus === '대기' ? '#ffe0b2' : 
-                      o.orderStatus === '진행' ? '#bbdefb' : 
-                      o.orderStatus === '완료' ? '#c8e6c9' : '#e0e0e0',
+                      o.status === '대기중' ? '#ffe0b2' : 
+                      o.status === '진행' ? '#bbdefb' : 
+                      o.status === '완료' ? '#c8e6c9' : '#e0e0e0',
                     color: 
-                      o.orderStatus === '대기' ? '#e65100' : 
-                      o.orderStatus === '진행' ? '#0d47a1' : 
-                      o.orderStatus === '완료' ? '#1b5e20' : '#333',
+                      o.status === '대기중' ? '#e65100' : 
+                      o.status === '진행' ? '#0d47a1' : 
+                      o.status === '완료' ? '#1b5e20' : '#333',
                   }}>
-                    {o.orderStatus}
+                    {o.status}
                   </span>
                 </td>
               </tr>

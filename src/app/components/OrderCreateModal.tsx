@@ -9,24 +9,26 @@ interface OrderCreateModalProps {
 }
 
 export interface OrderData {
+  id?: string;
   date: string;
-  product: string;
-  qty: string;
+  productName: string;
+  quantity: string;
   memo: string;
-  company: string;
+  userId?: string;
+  companyName: string;
   address: string;
-  orderStatus: string;
+  status: string;
 }
 
 export default function OrderCreateModal({ isOpen, onClose, onSubmit }: OrderCreateModalProps) {
   const [orderData, setOrderData] = useState<OrderData>({
     date: new Date().toISOString().split('T')[0],
-    product: "",
-    qty: "",
+    productName: "",
+    quantity: "",
     memo: "",
-    company: "",
+    companyName: "",
     address: "",
-    orderStatus: "대기", // 기본값을 '대기'로 설정
+    status: "대기중", // 기본값을 '대기중'로 설정
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -136,8 +138,8 @@ export default function OrderCreateModal({ isOpen, onClose, onSubmit }: OrderCre
                 제품명
               </label>
               <select
-                name="product"
-                value={orderData.product}
+                name="productName"
+                value={orderData.productName}
                 onChange={handleChange}
                 style={{
                   width: "100%",
@@ -168,8 +170,8 @@ export default function OrderCreateModal({ isOpen, onClose, onSubmit }: OrderCre
               </label>
               <input
                 type="text"
-                name="qty"
-                value={orderData.qty}
+                name="quantity"
+                value={orderData.quantity}
                 onChange={handleChange}
                 placeholder="수량을 입력하세요"
                 style={{
@@ -196,8 +198,8 @@ export default function OrderCreateModal({ isOpen, onClose, onSubmit }: OrderCre
               </label>
               <input
                 type="text"
-                name="company"
-                value={orderData.company}
+                name="companyName"
+                value={orderData.companyName}
                 onChange={handleChange}
                 placeholder="회사명을 입력하세요"
                 style={{

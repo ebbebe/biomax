@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 
 export interface AccountData {
+  id?: string;
   login: string;
   password: string;
   name: string;

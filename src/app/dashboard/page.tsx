@@ -3,6 +3,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import OrderCreateModal, { OrderData } from "../components/OrderCreateModal";
+import { AccountData } from "../components/AccountCreateModal";
 import OrderManagement from "../components/OrderManagement";
 import ProductManagement from "../components/ProductManagement";
 import AccountManagement from "../components/AccountManagement";
@@ -18,16 +19,51 @@ const TAB_LIST = [
   { label: "계정관리", icon: "🔑" },
 ];
 
-const ORDER_ROWS = [
+// 통합된 주문 데이터 형식
+const ORDER_ROWS: OrderData[] = [
   {
+    id: "1",
     date: "2025-04-28",
-    product: "AQUBAC 종균제 (kg)",
-    qty: "2,000",
+    productName: "AQUBAC 종균제 (kg)",
+    quantity: "2,000",
     memo: "빠른납기바랍니다.",
-    regid: "1111",
-    company: "주식회사 알에이디",
+    userId: "1111",
+    companyName: "주식회사 알에이디",
     address: "서울시 강남구",
-    orderStatus: "진행",
+    status: "진행",
+  },
+  {
+    id: "2",
+    date: "2025-05-01",
+    productName: "바이오맥스 (L)",
+    quantity: "1,500",
+    memo: "오후 배송 부탁드립니다.",
+    userId: "0811",
+    companyName: "칼릭스브릴리언",
+    address: "경기도 성남시",
+    status: "대기중",
+  },
+  {
+    id: "3",
+    date: "2025-05-03",
+    productName: "바이오스타 (kg)",
+    quantity: "800",
+    memo: "기존 주문과 함께 배송 부탁드립니다.",
+    userId: "9999",
+    companyName: "주식회사제뉴윈",
+    address: "서울시 마포구",
+    status: "완료",
+  },
+  {
+    id: "4",
+    date: "2025-05-05",
+    productName: "AQUBAC 종균제 (kg)",
+    quantity: "3,000",
+    memo: "안전포장 부탁드립니다.",
+    userId: "bbb",
+    companyName: "개발",
+    address: "서울시 서초구",
+    status: "진행",
   },
 ];
 
@@ -61,63 +97,98 @@ const PRODUCT_ROWS = [
   },
 ];
 
-// 거래처 데이터 - 품목 연결을 위해 사용
-// 실제로는 ACCOUNT_ROWS에서 가져와야 하지만 예시로 분리
-// 추후 계정관리와 통합하여 관리해야 함
-const COMPANY_ROWS = [
+// 통합된 계정/거래처 데이터
+const ACCOUNT_ROWS: AccountData[] = [
   { 
-    id: "1", 
-    name: "주식회사 알에이디",
-    businessNumber: "123-45-67890",
-    address: "서울특별시 강남구 테헤란로 123 알에이디빌딩 8층",
-    phone: "02-1234-5678"
+    id: "1",
+    login: "1111", 
+    password: "password456", 
+    name: "주식회사 알에이디", 
+    company: "주식회사 알에이디", 
+    brn: "123-45-67890", 
+    phone: "02-1234-5678", 
+    addr: "서울특별시 강남구 테헤란로 123 알에이디빌딩 8층", 
+    perm: "허용", 
+    level: "일반",
+    linkedProducts: []
   },
   { 
-    id: "2", 
-    name: "칼릭스브릴리언",
-    businessNumber: "234-56-78901",
-    address: "경기도 성남시 분당구 판교로 256 판교테크노밸리",
-    phone: "031-789-1234"
+    id: "2",
+    login: "0811", 
+    password: "password123", 
+    name: "김민준", 
+    company: "칼릭스브릴리언", 
+    brn: "234-56-78901", 
+    phone: "010-5106-7672", 
+    addr: "경기도 성남시 분당구 판교로 256 판교테크노밸리", 
+    perm: "허용", 
+    level: "관리",
+    linkedProducts: ["2", "3"]
   },
   { 
-    id: "3", 
-    name: "주식회사제뉴윈",
-    businessNumber: "345-67-89012",
-    address: "서울특별시 마포구 월드컵북로 396 누리꿈스퀘어",
-    phone: "02-2345-6789"
+    id: "3",
+    login: "9999", 
+    password: "password456", 
+    name: "김완주", 
+    company: "주식회사제뉴윈", 
+    brn: "345-67-89012", 
+    phone: "010-1234-5678", 
+    addr: "서울특별시 마포구 월드컵북로 396 누리꾸스퀘어", 
+    perm: "허용", 
+    level: "일반",
+    linkedProducts: ["3"]
   },
   { 
-    id: "4", 
-    name: "개발",
-    businessNumber: "456-78-90123",
-    address: "서울특별시 서초구 강남대로 373 홍우빌딩",
-    phone: "02-3456-7890"
+    id: "4",
+    login: "bbb", 
+    password: "admin123", 
+    name: "개발자", 
+    company: "개발", 
+    brn: "456-78-90123", 
+    phone: "010-0000-0000", 
+    addr: "서울특별시 서초구 강남대로 373 홍우빌딩", 
+    perm: "허용", 
+    level: "관리",
+    linkedProducts: []
   },
-];
-
-const ACCOUNT_ROWS = [
-  { login: "333", password: "password123", name: "3(권한)", company: "3(권한)", brn: "3(권한)", phone: "", addr: "", perm: "허용", level: "일반" },
-  { login: "1111", password: "password456", name: "주식회사 알에이디", company: "주식회사 알에이디", brn: "29026561616", phone: "01056541621", addr: "", perm: "허용", level: "일반" },
-  { login: "0811", password: "password123", name: "김민준", company: "칼릭스브릴리언", brn: "863-07-02067", phone: "010-5106-7672", addr: "서울특별시 영등포구", perm: "허용", level: "관리" },
-  { login: "9999", password: "password456", name: "김완주", company: "주식회사제뉴윈", brn: "222-44-12312", phone: "010-1234-5678", addr: "경기도 성남시", perm: "허용", level: "일반" },
-  { login: "bbb", password: "admin123", name: "개발자", company: "개발", brn: "000-00-00000", phone: "010-0000-0000", addr: "아메리카 뉴욕", perm: "허용", level: "관리" },
+  { 
+    id: "5",
+    login: "333", 
+    password: "password123", 
+    name: "3(권한)", 
+    company: "3(권한)", 
+    brn: "3(권한)", 
+    phone: "", 
+    addr: "", 
+    perm: "허용", 
+    level: "일반",
+    linkedProducts: []
+  },
 ];
 
 export default function DashboardPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>("주문등록");
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
-  // 주문 데이터 상태 관리
-  const [orders, setOrders] = useState<Array<OrderData & { regid: string }>>(ORDER_ROWS);
+  // 주문 데이터 상태 관리 - 통합된 형식 사용
+  const [orders, setOrders] = useState<OrderData[]>(ORDER_ROWS);
   // 사용자 권한 상태 (실제 구현에서는 로그인 시 서버에서 받아온 권한 정보를 사용)
   const [isAdmin, setIsAdmin] = useState(true); // 기본값을 true로 설정하여 관리자 메뉴 표시
   
+  // 계정관리 관련 상태
+  const [accounts, setAccounts] = useState<AccountData[]>(ACCOUNT_ROWS);
+  
   // 품목관리 관련 상태
   const [products, setProducts] = useState(PRODUCT_ROWS);
-  const [companies, setCompanies] = useState(COMPANY_ROWS);
   
-  // 계정관리 관련 상태
-  const [accounts, setAccounts] = useState(ACCOUNT_ROWS);
+  // 계정 데이터에서 회사 정보 추출
+  const companies = accounts.map(account => ({
+    id: account.id || account.login, // id가 없으면 login을 id로 사용
+    name: account.company,
+    businessNumber: account.brn,
+    address: account.addr,
+    phone: account.phone
+  }));
 
   // sidebar structure with role-based access
   const menu = [
@@ -153,11 +224,12 @@ export default function DashboardPage() {
     }
     
     if (activeTab === "계정관리") {
-      // 계정관리 화면에 품목 데이터 전달
+      // 계정관리 화면에 품목과 주문 데이터 전달
       return <AccountManagement 
         accounts={accounts} 
         setAccounts={setAccounts} 
         products={products.map(p => ({ id: p.id, name: p.name }))}
+        orders={orders}
       />;
     }
 
@@ -286,9 +358,16 @@ export default function DashboardPage() {
   const handleOrderSubmit = (orderData: OrderData) => {
     // 실제 구현에서는 API 호출 등을 통해 서버에 데이터를 저장할 수 있습니다.
     // 여기서는 로컬 상태에 추가하는 방식으로 구현합니다.
-    const newOrder = {
-      ...orderData,
-      regid: "개발", // 현재 로그인한 사용자 ID
+    const newOrder: OrderData = {
+      id: String(Date.now()),
+      date: new Date().toISOString().split('T')[0],
+      productName: orderData.productName,
+      quantity: orderData.quantity,
+      memo: orderData.memo,
+      userId: "bbb", // 현재 로그인한 사용자 ID
+      companyName: orderData.companyName,
+      address: orderData.address,
+      status: "대기중",
     };
 
     setOrders([newOrder, ...orders]);

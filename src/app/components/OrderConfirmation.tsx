@@ -5,8 +5,8 @@ import { OrderData } from "./OrderCreateModal";
 import CompanyDetailModal from "./CompanyDetailModal";
 
 interface OrderConfirmationProps {
-  orders: Array<OrderData & { regid: string }>;
-  setOrders?: React.Dispatch<React.SetStateAction<Array<OrderData & { regid: string }>>>;
+  orders: Array<OrderData>;
+  setOrders?: React.Dispatch<React.SetStateAction<Array<OrderData>>>;
   companies: Array<{
     id: string;
     name: string;
@@ -23,7 +23,7 @@ export default function OrderConfirmation({ orders, setOrders, companies }: Orde
     
     setOrders(prevOrders => 
       prevOrders.map(order => 
-        order.regid === orderId ? { ...order, orderStatus: newStatus } : order
+        order.id === orderId ? { ...order, status: newStatus } : order
       )
     );
   };
@@ -86,13 +86,13 @@ export default function OrderConfirmation({ orders, setOrders, companies }: Orde
           </thead>
           <tbody>
             {orders.map((o, i) => (
-              <tr key={o.regid} style={{textAlign:'center',color:'#333'}}>
+              <tr key={o.id} style={{textAlign:'center',color:'#333'}}>
                 <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}><input type="checkbox" checked={false} readOnly /></td>
                 <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{o.date}</td>
-                <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{o.product}</td>
-                <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{o.qty}</td>
+                <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{o.productName}</td>
+                <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{o.quantity}</td>
                 <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{o.memo}</td>
-                <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{o.regid}</td>
+                <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{o.userId}</td>
                 <td 
                   style={{
                     border:'1px solid #bcbcbc',
@@ -101,10 +101,10 @@ export default function OrderConfirmation({ orders, setOrders, companies }: Orde
                     textDecoration: 'underline',
                     color: '#1976d2'
                   }}
-                  onClick={() => handleCompanyClick(o.company)}
+                  onClick={() => handleCompanyClick(o.companyName)}
                   title="거래처 상세 정보 보기"
                 >
-                  {o.company}
+                  {o.companyName}
                 </td>
                 <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{o.address}</td>
                 <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>
@@ -114,44 +114,44 @@ export default function OrderConfirmation({ orders, setOrders, companies }: Orde
                     borderRadius: '4px',
                     fontSize: '14px',
                     backgroundColor: 
-                      o.orderStatus === '대기' ? '#ffe0b2' : 
-                      o.orderStatus === '진행' ? '#bbdefb' : 
-                      o.orderStatus === '완료' ? '#c8e6c9' : '#e0e0e0',
+                      o.status === '대기중' ? '#ffe0b2' : 
+                      o.status === '진행' ? '#bbdefb' : 
+                      o.status === '완료' ? '#c8e6c9' : '#e0e0e0',
                     color: 
-                      o.orderStatus === '대기' ? '#e65100' : 
-                      o.orderStatus === '진행' ? '#0d47a1' : 
-                      o.orderStatus === '완료' ? '#1b5e20' : '#333',
+                      o.status === '대기중' ? '#e65100' : 
+                      o.status === '진행' ? '#0d47a1' : 
+                      o.status === '완료' ? '#1b5e20' : '#333',
                   }}>
-                    {o.orderStatus}
+                    {o.status}
                   </span>
                 </td>
                 <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>
                   <div style={{display:'flex',justifyContent:'center',gap:5}}>
-                    {o.orderStatus === '대기' && (
+                    {o.status === '대기중' && (
                       <>
                         <button 
-                          onClick={() => handleStatusChange(o.regid, '진행')}
+                          onClick={() => handleStatusChange(o.id!, '진행')}
                           style={{background:'#4caf50',color:'white',border:'none',borderRadius:4,padding:'3px 8px',fontSize:13,cursor:'pointer'}}
                         >
                           승인
                         </button>
                         <button 
-                          onClick={() => handleStatusChange(o.regid, '반려')}
+                          onClick={() => handleStatusChange(o.id!, '반려')}
                           style={{background:'#f44336',color:'white',border:'none',borderRadius:4,padding:'3px 8px',fontSize:13,cursor:'pointer'}}
                         >
                           반려
                         </button>
                       </>
                     )}
-                    {o.orderStatus === '진행' && (
+                    {o.status === '진행' && (
                       <button 
-                        onClick={() => handleStatusChange(o.regid, '완료')}
+                        onClick={() => handleStatusChange(o.id!, '완료')}
                         style={{background:'#2196f3',color:'white',border:'none',borderRadius:4,padding:'3px 8px',fontSize:13,cursor:'pointer'}}
                       >
                         완료처리
                       </button>
                     )}
-                    {(o.orderStatus === '완료' || o.orderStatus === '반려') && (
+                    {(o.status === '완료' || o.status === '반려') && (
                       <span style={{color:'#888',fontSize:13}}>처리완료</span>
                     )}
                   </div>

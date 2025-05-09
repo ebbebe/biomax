@@ -1,6 +1,9 @@
 "use client";
-import { useState } from "react";
-import AccountCreateModal, { AccountData } from "./AccountCreateModal";
+import React, { useState } from "react";
+import { AccountData } from "./AccountCreateModal";
+import AccountCreateModal from "./AccountCreateModal";
+import AccountCompanyOrdersModal from "./AccountCompanyOrdersModal";
+import { OrderData } from "./OrderCreateModal";
 
 interface AccountManagementProps {
   accounts: AccountData[];
@@ -9,10 +12,12 @@ interface AccountManagementProps {
     id: string;
     name: string;
   }>;
+  orders?: OrderData[];
 }
 
-export default function AccountManagement({ accounts, setAccounts, products = [] }: AccountManagementProps) {
+export default function AccountManagement({ accounts, setAccounts, products = [], orders = [] }: AccountManagementProps) {
   const [showAccountCreateModal, setShowAccountCreateModal] = useState(false);
+  const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
 
   // 계정 등록 처리
   const handleAccountCreate = (newAccount: AccountData) => {
@@ -78,7 +83,19 @@ export default function AccountManagement({ accounts, setAccounts, products = []
                 <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{row.login}</td>
                 <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{row.password ? '••••••••' : '-'}</td>
                 <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{row.name}</td>
-                <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{row.company}</td>
+                <td 
+                  style={{
+                    border:'1px solid #bcbcbc',
+                    padding:'6px 0',
+                    cursor: 'pointer',
+                    color: '#1a5595',
+                    textDecoration: 'underline'
+                  }}
+                  onClick={() => setSelectedCompany(row.company)}
+                  title="클릭하여 주문내역 보기"
+                >
+                  {row.company}
+                </td>
                 <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{row.brn}</td>
                 <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{row.phone}</td>
                 <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{row.addr}</td>
@@ -107,6 +124,14 @@ export default function AccountManagement({ accounts, setAccounts, products = []
           onClose={() => setShowAccountCreateModal(false)}
           onSave={handleAccountCreate}
           products={products}
+        />
+      )}
+
+      {selectedCompany && (
+        <AccountCompanyOrdersModal
+          companyName={selectedCompany}
+          orders={orders}
+          onClose={() => setSelectedCompany(null)}
         />
       )}
     </>
