@@ -37,26 +37,26 @@ const ORDER_ROWS = [
 const PRODUCT_ROWS = [
   {
     id: "1",
+    code: "P001",
     name: "AQUBAC 종균제 (kg)",
-    price: "10,000",
     stock: "5,000",
-    category: "백신",
+    registrationDate: "2025-04-01",
     linkedCompanies: ["주식회사 알에이디"],
   },
   {
     id: "2",
+    code: "P002",
     name: "바이오맥스 (L)",
-    price: "15,000",
     stock: "3,000",
-    category: "산소공급제",
+    registrationDate: "2025-04-15",
     linkedCompanies: ["칼릭스브릴리언"],
   },
   {
     id: "3",
+    code: "P003",
     name: "바이오스타 (kg)",
-    price: "12,000",
     stock: "2,500",
-    category: "백신",
+    registrationDate: "2025-04-28",
     linkedCompanies: ["칼릭스브릴리언", "주식회사제뉴윈"],
   },
 ];

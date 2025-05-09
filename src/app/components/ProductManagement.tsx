@@ -1,12 +1,13 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
+import ProductCreateModal from "./ProductCreateModal";
 
 interface ProductData {
   id: string;
+  code: string;
   name: string;
-  price: string;
   stock: string;
-  category: string;
+  registrationDate: string;
   linkedCompanies: string[];
 }
 
@@ -29,11 +30,29 @@ export default function ProductManagement({ products, setProducts, companies }: 
   const [viewingLinkedCompanies, setViewingLinkedCompanies] = useState<string[]>([]);
   const [viewingProductName, setViewingProductName] = useState<string>("");
   const [companySearchTerm, setCompanySearchTerm] = useState<string>("");
+  const [showProductCreateModal, setShowProductCreateModal] = useState(false);
   
   // 검색어에 따라 필터링된 거래처 목록
   const filteredLinkedCompanies = viewingLinkedCompanies.filter(company => 
     company.toLowerCase().includes(companySearchTerm.toLowerCase())
   );
+  
+  // 카테고리 필드는 삭제되었으니 이 코드도 삭제
+  
+  // 품목 등록 처리
+  const handleProductCreate = (newProduct: Omit<ProductData, "id" | "linkedCompanies">) => {
+    // 새 ID 생성 (실제로는 서버에서 처리해야 함)
+    const newId = (Math.max(...products.map(p => parseInt(p.id)), 0) + 1).toString();
+    
+    const newProductWithId: ProductData = {
+      ...newProduct,
+      id: newId,
+      linkedCompanies: [],
+    };
+    
+    setProducts([...products, newProductWithId]);
+    setShowProductCreateModal(false);
+  };
 
   return (
     <>
@@ -42,7 +61,11 @@ export default function ProductManagement({ products, setProducts, companies }: 
         <span style={{flex:1}} />
         {/* toolbar icons */}
         <span title="새로고침" style={{marginLeft:12,marginRight:11,cursor:'pointer',fontSize:19}}>↻</span>
-        <span title="등록" style={{marginRight:13,cursor:'pointer',fontSize:19}}>💾</span>
+        <span 
+          title="등록" 
+          style={{marginRight:13,cursor:'pointer',fontSize:19}}
+          onClick={() => setShowProductCreateModal(true)}
+        >💾</span>
         <span title="수정" style={{marginRight:13,cursor:'pointer',fontSize:19}}>✏️</span>
         <span title="삭제" style={{marginRight:13,cursor:'pointer',fontSize:19}}>🗑️</span>
         <span title="엑셀" style={{marginRight:13,cursor:'pointer',fontSize:19}}>📄</span>
@@ -50,7 +73,6 @@ export default function ProductManagement({ products, setProducts, companies }: 
       {/* Filters */}
       <div style={{display:'flex',alignItems:'center',padding:'17px 12px 8px 14px',background:'#fff',borderBottom:'1px solid #c6dee9',gap:8}}>
         <input style={{border:'1px solid #bcbcbc',borderRadius:4,padding:'5px 8px',fontSize:15,width:130}} placeholder="제품명" />
-        <input style={{border:'1px solid #bcbcbc',borderRadius:4,padding:'5px 8px',fontSize:15,width:113}} placeholder="카테고리" />
         <select 
           style={{border:'1px solid #bcbcbc',borderRadius:4,padding:'5px 11px',fontSize:15,minWidth:150}} 
           value={selectedCompanyFilter}
@@ -68,10 +90,10 @@ export default function ProductManagement({ products, setProducts, companies }: 
           <thead>
             <tr style={{background:'#f4f5f5',borderBottom:'2.5px solid #1976d2',color:'#1a5595'}}>
               <th style={{width:51,padding:'8px 0',border:'1px solid #bcbcbc'}}><input type="checkbox" readOnly /></th>
+              <th style={{padding:'8px 0',border:'1px solid #bcbcbc'}}>등록일자</th>
+              <th style={{padding:'8px 0',border:'1px solid #bcbcbc'}}>상품코드</th>
               <th style={{padding:'8px 0',border:'1px solid #bcbcbc'}}>제품명</th>
-              <th style={{padding:'8px 0',border:'1px solid #bcbcbc'}}>가격</th>
               <th style={{padding:'8px 0',border:'1px solid #bcbcbc'}}>재고</th>
-              <th style={{padding:'8px 0',border:'1px solid #bcbcbc'}}>카테고리</th>
               <th style={{padding:'8px 0',border:'1px solid #bcbcbc'}}>연결된 거래처</th>
             </tr>
           </thead>
@@ -87,10 +109,10 @@ export default function ProductManagement({ products, setProducts, companies }: 
                     onChange={() => setSelectedProduct(selectedProduct === product.id ? null : product.id)} 
                   />
                 </td>
+                <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{product.registrationDate || '-'}</td>
+                <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{product.code || '-'}</td>
                 <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{product.name}</td>
-                <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{product.price}</td>
                 <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{product.stock}</td>
-                <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{product.category}</td>
                 <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>
                   <button
                     onClick={() => {
@@ -383,6 +405,14 @@ export default function ProductManagement({ products, setProducts, companies }: 
             </div>
           </div>
         </div>
+      )}
+      
+      {/* 품목 등록 모달 */}
+      {showProductCreateModal && (
+        <ProductCreateModal
+          onClose={() => setShowProductCreateModal(false)}
+          onSave={handleProductCreate}
+        />
       )}
     </>
   );
