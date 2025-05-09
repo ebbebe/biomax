@@ -96,11 +96,11 @@ const COMPANY_ROWS = [
 ];
 
 const ACCOUNT_ROWS = [
-  { login: "333", name: "3(권한)", company: "3(권한)", brn: "3(권한)", phone: "", contact: "", addr: "", perm: "허용", level: "일반" },
-  { login: "1111", name: "주식회사 알에이디", company: "주식회사 알에이디", brn: "29026561616", phone: "01056541621", contact: "", addr: "", perm: "허용", level: "일반" },
-  { login: "0811", name: "김민준", company: "칼릭스브릴리언", brn: "8630702067", phone: "01051067672", contact: "", addr: "서울특별시 영등포구", perm: "허용", level: "관리" },
-  { login: "9999", name: "김완주", company: "주식회사제뉴윈", brn: "2224412312", phone: "", contact: "", addr: "", perm: "허용", level: "일반" },
-  { login: "bbb", name: "개발자", company: "개발", brn: "0000000", phone: "010-00000000", contact: "", addr: "아메리카 뉴욕", perm: "허용", level: "관리" },
+  { login: "333", password: "password123", name: "3(권한)", company: "3(권한)", brn: "3(권한)", phone: "", addr: "", perm: "허용", level: "일반" },
+  { login: "1111", password: "password456", name: "주식회사 알에이디", company: "주식회사 알에이디", brn: "29026561616", phone: "01056541621", addr: "", perm: "허용", level: "일반" },
+  { login: "0811", password: "password123", name: "김민준", company: "칼릭스브릴리언", brn: "863-07-02067", phone: "010-5106-7672", addr: "서울특별시 영등포구", perm: "허용", level: "관리" },
+  { login: "9999", password: "password456", name: "김완주", company: "주식회사제뉴윈", brn: "222-44-12312", phone: "010-1234-5678", addr: "경기도 성남시", perm: "허용", level: "일반" },
+  { login: "bbb", password: "admin123", name: "개발자", company: "개발", brn: "000-00-00000", phone: "010-0000-0000", addr: "아메리카 뉴욕", perm: "허용", level: "관리" },
 ];
 
 export default function DashboardPage() {
@@ -115,6 +115,9 @@ export default function DashboardPage() {
   // 품목관리 관련 상태
   const [products, setProducts] = useState(PRODUCT_ROWS);
   const [companies, setCompanies] = useState(COMPANY_ROWS);
+  
+  // 계정관리 관련 상태
+  const [accounts, setAccounts] = useState(ACCOUNT_ROWS);
 
   // sidebar structure with role-based access
   const menu = [
@@ -150,7 +153,12 @@ export default function DashboardPage() {
     }
     
     if (activeTab === "계정관리") {
-      return <AccountManagement accounts={ACCOUNT_ROWS} />;
+      // 계정관리 화면에 품목 데이터 전달
+      return <AccountManagement 
+        accounts={accounts} 
+        setAccounts={setAccounts} 
+        products={products.map(p => ({ id: p.id, name: p.name }))}
+      />;
     }
 
     return null;

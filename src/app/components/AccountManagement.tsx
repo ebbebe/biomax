@@ -1,22 +1,26 @@
 "use client";
-
-interface AccountData {
-  login: string;
-  name: string;
-  company: string;
-  brn: string;
-  phone: string;
-  contact: string;
-  addr: string;
-  perm: string;
-  level: string;
-}
+import { useState } from "react";
+import AccountCreateModal, { AccountData } from "./AccountCreateModal";
 
 interface AccountManagementProps {
   accounts: AccountData[];
+  setAccounts?: React.Dispatch<React.SetStateAction<AccountData[]>>;
+  products?: Array<{
+    id: string;
+    name: string;
+  }>;
 }
 
-export default function AccountManagement({ accounts }: AccountManagementProps) {
+export default function AccountManagement({ accounts, setAccounts, products = [] }: AccountManagementProps) {
+  const [showAccountCreateModal, setShowAccountCreateModal] = useState(false);
+
+  // 계정 등록 처리
+  const handleAccountCreate = (newAccount: AccountData) => {
+    if (setAccounts) {
+      setAccounts(prev => [...prev, newAccount]);
+    }
+    setShowAccountCreateModal(false);
+  };
   return (
     <>
       <div style={{ background: '#1a5595', height: 40, display: 'flex', alignItems: 'center', padding: '0 13px', color: '#fff', fontSize: 17 }}>
@@ -24,7 +28,11 @@ export default function AccountManagement({ accounts }: AccountManagementProps) 
         <span style={{flex:1}} />
         {/* toolbar icons */}
         <span title="새로고침" style={{marginLeft:12,marginRight:11,cursor:'pointer',fontSize:19}}>↻</span>
-        <span title="등록" style={{marginRight:13,cursor:'pointer',fontSize:19}}>💾</span>
+        <span 
+          title="등록" 
+          style={{marginRight:13,cursor:'pointer',fontSize:19}}
+          onClick={() => setShowAccountCreateModal(true)}
+        >💾</span>
         <span title="수정" style={{marginRight:13,cursor:'pointer',fontSize:19}}>✏️</span>
         <span title="삭제" style={{marginRight:13,cursor:'pointer',fontSize:19}}>🗑️</span>
         <span title="엑셀" style={{marginRight:13,cursor:'pointer',fontSize:19}}>📄</span>
@@ -53,6 +61,7 @@ export default function AccountManagement({ accounts }: AccountManagementProps) 
             <tr style={{background:'#f4f5f5',borderBottom:'2.5px solid #1976d2',color:'#1a5595'}}>
               <th style={{width:51,padding:'8px 0',border:'1px solid #bcbcbc'}}><input type="checkbox" checked={true} readOnly /></th>
               <th style={{padding:'8px 0',border:'1px solid #bcbcbc'}}>계정</th>
+              <th style={{padding:'8px 0',border:'1px solid #bcbcbc'}}>비밀번호</th>
               <th style={{padding:'8px 0',border:'1px solid #bcbcbc'}}>이름</th>
               <th style={{padding:'8px 0',border:'1px solid #bcbcbc'}}>사업자명</th>
               <th style={{padding:'8px 0',border:'1px solid #bcbcbc'}}>사업자번호</th>
@@ -67,6 +76,7 @@ export default function AccountManagement({ accounts }: AccountManagementProps) 
               <tr key={row.login} style={{textAlign:'center',color:'#333'}}>
                 <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}><input type="checkbox" checked={i===0} readOnly /></td>
                 <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{row.login}</td>
+                <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{row.password ? '••••••••' : '-'}</td>
                 <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{row.name}</td>
                 <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{row.company}</td>
                 <td style={{border:'1px solid #bcbcbc',padding:'6px 0'}}>{row.brn}</td>
@@ -90,6 +100,15 @@ export default function AccountManagement({ accounts }: AccountManagementProps) 
           </select>
         </div>
       </div>
+
+      {/* 계정 등록 모달 */}
+      {showAccountCreateModal && (
+        <AccountCreateModal
+          onClose={() => setShowAccountCreateModal(false)}
+          onSave={handleAccountCreate}
+          products={products}
+        />
+      )}
     </>
   );
 }
