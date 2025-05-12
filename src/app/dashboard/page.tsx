@@ -23,7 +23,7 @@ const ORDER_ROWS: OrderData[] = [
     userId: "1111",
     companyName: "주식회사 알에이디",
     address: "서울시 강남구",
-    status: "진행",
+    status: "완료",
   },
   {
     id: "2",
@@ -34,7 +34,7 @@ const ORDER_ROWS: OrderData[] = [
     userId: "0811",
     companyName: "칼릭스브릴리언",
     address: "경기도 성남시",
-    status: "대기중",
+    status: "대기",
   },
   {
     id: "3",
@@ -56,7 +56,7 @@ const ORDER_ROWS: OrderData[] = [
     userId: "bbb",
     companyName: "개발",
     address: "서울시 서초구",
-    status: "진행",
+    status: "완료",
   },
 ];
 
@@ -327,7 +327,7 @@ export default function DashboardPage() {
       userId: "bbb", // 현재 로그인한 사용자 ID
       companyName: orderData.companyName,
       address: orderData.address,
-      status: "대기중",
+      status: "대기",
     };
 
     setOrders([newOrder, ...orders]);
