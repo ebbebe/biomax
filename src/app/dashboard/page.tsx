@@ -377,8 +377,24 @@ export default function DashboardPage() {
         </div>
         {/* Main Content */}
         <main style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
-          {/* Main Panel - Tabs removed for cleaner UI */}
-          <div style={{ background: '#fff', flex: 1, padding: '20px', borderRadius: '4px 0 0 0' }}>
+          {/* 현재 활성화된 메뉴를 보여주는 헤더 */}
+          <div style={{ 
+            background: "#1a5595", 
+            color: "#fff", 
+            padding: "14px 22px", 
+            fontWeight: 500, 
+            letterSpacing: 0.5, 
+            fontSize: 17,
+            display: 'flex',
+            alignItems: 'center'
+          }}>
+            <span style={{ fontSize: 19, marginRight: 9 }}>
+              {menu.find(item => item.name === activeTab)?.icon || '📄'}
+            </span> 
+            {activeTab}
+          </div>
+          {/* Main Panel - Content area */}
+          <div style={{ background: '#fff', flex: 1, padding: '20px' }}>
             {renderContent()}
           </div>
         </main>
