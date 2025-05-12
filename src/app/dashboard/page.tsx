@@ -9,15 +9,8 @@ import AccountManagement from "../components/AccountManagement";
 import OrderConfirmation from "../components/OrderConfirmation";
 import { OrderData, AccountData, ProductData } from "../../types";
 
-// Demo data for each tab
+// Menu types for navigation
 type TabType = "주문등록" | "계정관리" | "품목관리" | "주문확인";
-
-const TAB_LIST = [
-  { label: "주문등록", icon: "📦" },
-  { label: "품목관리", icon: "📋" },
-  { label: "주문확인", icon: "📃" },
-  { label: "계정관리", icon: "🔑" },
-];
 
 // 통합된 주문 데이터 형식
 const ORDER_ROWS: OrderData[] = [
@@ -236,40 +229,7 @@ export default function DashboardPage() {
     return null;
   }
 
-  // Tabs bar content for upper tab navigation
-  function renderTabs() {
-    return (
-      <div style={{ display: 'flex', alignItems: 'flex-end', background: '#f4f5f5', minHeight: 47, paddingLeft: 9, gap:1 }}>
-        {TAB_LIST.map(tab => (
-          <div
-            key={tab.label}
-            style={{
-              background: activeTab === tab.label ? '#fff' : '#e7eef2',
-              borderTopLeftRadius: 8,
-              borderTopRightRadius: 8,
-              padding: '8px 26px 9px 22px',
-              fontSize: 18,
-              color: activeTab === tab.label ? '#1a5595' : '#7c7c7c',
-              boxShadow: activeTab === tab.label ? '0 0 4px #d4cccc' : undefined,
-              fontWeight: 500,
-              cursor: 'pointer',
-              border: activeTab === tab.label ? '1.7px solid #1a5595' : '1.7px solid #e7eef2',
-              borderBottom: activeTab === tab.label ? 'none' : '1.7px solid #e7eef2',
-              display: 'flex',
-              alignItems: 'center',
-              marginRight: 2,
-            }}
-            onClick={() => setActiveTab(tab.label as TabType)}
-          >
-            <span style={{fontSize:21,marginRight:10}}>{tab.icon}</span>{tab.label}
-            {activeTab === tab.label && (
-              <span style={{marginLeft:15,fontWeight:'normal',color:'#aaa',fontSize:21,cursor:'pointer'}}>×</span>
-            )}
-          </div>
-        ))}
-      </div>
-    );
-  }
+  // Removed tabs navigation function as it's redundant with sidebar
   // Sidebar menu items
   function renderSidebar() {
     // 일반 메뉴와 관리자 메뉴 필터링
@@ -417,10 +377,10 @@ export default function DashboardPage() {
         </div>
         {/* Main Content */}
         <main style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
-          {/* Tabs */}
-          {renderTabs()}
-          {/* Main Panel */}
-          {renderContent()}
+          {/* Main Panel - Tabs removed for cleaner UI */}
+          <div style={{ background: '#fff', flex: 1, padding: '20px', borderRadius: '4px 0 0 0' }}>
+            {renderContent()}
+          </div>
         </main>
       </div>
     </div>
