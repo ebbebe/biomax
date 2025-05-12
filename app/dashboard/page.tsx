@@ -168,58 +168,6 @@ export default function Dashboard() {
           </ul>
         </div>
       </motion.div>
-      
-      {/* 통계 카드 */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-        className="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
-      >
-        <div className="bg-blue-600 rounded-lg shadow-md p-6 text-white">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-medium">총 주문수</h3>
-            <svg className="h-8 w-8 text-indigo-200" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-          </div>
-          <p className="text-3xl font-bold mt-4">128</p>
-          <p className="text-indigo-100 text-sm mt-2">지난달 대비 12% 증가</p>
-        </div>
-        
-        <div className="bg-green-600 rounded-lg shadow-md p-6 text-white">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-medium">총 품목수</h3>
-            <svg className="h-8 w-8 text-blue-200" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-            </svg>
-          </div>
-          <p className="text-3xl font-bold mt-4">54</p>
-          <p className="text-blue-100 text-sm mt-2">지난달 대비 5% 증가</p>
-        </div>
-        
-        <div className="bg-teal-600 rounded-lg shadow-md p-6 text-white">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-medium">완료된 주문</h3>
-            <svg className="h-8 w-8 text-green-200" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <p className="text-3xl font-bold mt-4">98</p>
-          <p className="text-green-100 text-sm mt-2">지난달 대비 8% 증가</p>
-        </div>
-        
-        <div className="bg-indigo-600 rounded-lg shadow-md p-6 text-white">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-medium">사용자수</h3>
-            <svg className="h-8 w-8 text-purple-200" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-            </svg>
-          </div>
-          <p className="text-3xl font-bold mt-4">32</p>
-          <p className="text-purple-100 text-sm mt-2">지난달 대비 15% 증가</p>
-        </div>
-      </motion.div>
     </div>
   );
 }
