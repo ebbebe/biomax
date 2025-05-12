@@ -1,5 +1,8 @@
 "use client";
+
 import React, { useState } from "react";
+import { COLORS } from "../../constants/theme";
+import { COMMON_STYLES } from "../../constants/styles";
 import { AccountData } from "./AccountCreateModal";
 import AccountCreateModal from "./AccountCreateModal";
 import AccountCompanyOrdersModal from "./AccountCompanyOrdersModal";
@@ -58,7 +61,7 @@ export default function AccountManagement({ accounts, setAccounts, products = []
           <option value="일반">일반</option>
           <option value="관리">관리</option>
         </select>
-        <button style={{background:'#1976d2',color:'#fff',fontWeight:500,border:'none',borderRadius:4,fontSize:16,padding:'6px 19px',marginLeft:4,boxShadow:'0 0.7px 2.2px #7c747c30',cursor:'pointer'}}>조회</button>
+        <button style={COMMON_STYLES.button.search}>조회</button>
       </div>
       <div style={{flex:1,background:'#fff',padding:'0 0 0 0',display:'flex',flexDirection:'column',overflow:'auto'}}>
         <table style={{width:'100%',borderCollapse:'collapse',fontSize:16.7,marginTop:1,border:'1px solid #bcbcbc'}}>

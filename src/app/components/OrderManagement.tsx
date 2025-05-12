@@ -1,6 +1,8 @@
 "use client";
 
-import { OrderData } from "./OrderCreateModal";
+import { OrderData } from "../../types";
+import { COLORS } from "../../constants/theme";
+import { COMMON_STYLES } from "../../constants/styles";
 
 interface OrderManagementProps {
   orders: Array<OrderData>;
@@ -46,7 +48,7 @@ export default function OrderManagement({ orders, setOrders, setIsOrderModalOpen
           <option value="진행">진행</option>
           <option value="완료">완료</option>
         </select>
-        <button style={{background:'#1976d2',color:'#fff',fontWeight:500,border:'none',borderRadius:4,fontSize:16,padding:'6px 19px',marginLeft:7,boxShadow:'0 0.7px 2.2px #7c747c30',cursor:'pointer'}}>조회</button>
+        <button style={COMMON_STYLES.button.search}>조회</button>
       </div>
       <div style={{flex:1,background:'#fff',padding:'0 0 0 0',display:'flex',flexDirection:'column',overflow:'auto'}}>
         <table style={{width:'100%',borderCollapse:'collapse',fontSize:17,marginTop:1,border:'1px solid #bcbcbc'}}>

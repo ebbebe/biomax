@@ -1,20 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-
-export interface AccountData {
-  id?: string;
-  login: string;
-  password: string;
-  name: string;
-  company: string;
-  brn: string;
-  phone: string;
-  addr: string;
-  perm: string;
-  level: string;
-  linkedProducts?: string[];
-}
+import { AccountData } from "../../types";
 
 interface AccountCreateModalProps {
   onClose: () => void;

@@ -1,15 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-
-export interface ProductData {
-  id: string;
-  code: string;
-  name: string;
-  stock: string;
-  registrationDate: string;
-  linkedCompanies: string[];
-}
+import { ProductData } from "../../types";
 
 interface ProductCreateModalProps {
   onClose: () => void;

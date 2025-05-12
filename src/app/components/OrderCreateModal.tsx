@@ -1,23 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { OrderData } from "../../types";
 
 interface OrderCreateModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (orderData: OrderData) => void;
-}
-
-export interface OrderData {
-  id?: string;
-  date: string;
-  productName: string;
-  quantity: string;
-  memo: string;
-  userId?: string;
-  companyName: string;
-  address: string;
-  status: string;
 }
 
 export default function OrderCreateModal({ isOpen, onClose, onSubmit }: OrderCreateModalProps) {

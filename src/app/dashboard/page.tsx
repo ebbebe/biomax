@@ -2,12 +2,12 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import OrderCreateModal, { OrderData } from "../components/OrderCreateModal";
-import { AccountData } from "../components/AccountCreateModal";
+import OrderCreateModal from "../components/OrderCreateModal";
 import OrderManagement from "../components/OrderManagement";
 import ProductManagement from "../components/ProductManagement";
 import AccountManagement from "../components/AccountManagement";
 import OrderConfirmation from "../components/OrderConfirmation";
+import { OrderData, AccountData, ProductData } from "../../types";
 
 // Demo data for each tab
 type TabType = "주문등록" | "계정관리" | "품목관리" | "주문확인";

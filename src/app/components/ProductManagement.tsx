@@ -1,20 +1,10 @@
 "use client";
 import React, { useState, useMemo } from "react";
 import ProductCreateModal from "./ProductCreateModal";
-
-interface ProductData {
-  id: string;
-  code: string;
-  name: string;
-  stock: string;
-  registrationDate: string;
-  linkedCompanies: string[];
-}
-
-interface CompanyData {
-  id: string;
-  name: string;
-}
+import { ProductData, CompanyData } from "../../types";
+import { COLORS } from "../../constants/theme";
+import { COMMON_STYLES, FONT_SIZES, BORDER_RADIUS } from "../../constants/styles";
+import { LAYOUT } from "../../constants/layout";
 
 interface ProductManagementProps {
   products: ProductData[];
@@ -56,7 +46,7 @@ export default function ProductManagement({ products, setProducts, companies }: 
 
   return (
     <>
-      <div style={{ background: '#1a5595', height: 40, display: 'flex', alignItems: 'center', padding: '0 13px', color: '#fff', fontSize: 17 }}>
+      <div style={COMMON_STYLES.headerBar}>
         <span style={{fontWeight:500,marginRight:20}}>품목관리 [{products.length}]</span>
         <span style={{flex:1}} />
         {/* toolbar icons */}
@@ -71,8 +61,8 @@ export default function ProductManagement({ products, setProducts, companies }: 
         <span title="엑셀" style={{marginRight:13,cursor:'pointer',fontSize:19}}>📄</span>
       </div>
       {/* Filters */}
-      <div style={{display:'flex',alignItems:'center',padding:'17px 12px 8px 14px',background:'#fff',borderBottom:'1px solid #c6dee9',gap:8}}>
-        <input style={{border:'1px solid #bcbcbc',borderRadius:4,padding:'5px 8px',fontSize:15,width:130}} placeholder="제품명" />
+      <div style={{display:'flex',alignItems:'center',padding:'18px 12px 7px 14px',background:'#fff',borderBottom:'1px solid #c6dee9',gap:12}}>
+        <input style={{border:'1px solid #bcbcbc',borderRadius:4,padding:'5px 9px',fontSize:15,width:148}} placeholder="제품명" />
         <select 
           style={{border:'1px solid #bcbcbc',borderRadius:4,padding:'5px 11px',fontSize:15,minWidth:150}} 
           value={selectedCompanyFilter}
@@ -83,12 +73,12 @@ export default function ProductManagement({ products, setProducts, companies }: 
             <option key={company.id} value={company.name}>{company.name}</option>
           ))}
         </select>
-        <button style={{background:'#1976d2',color:'#fff',fontWeight:500,border:'none',borderRadius:4,fontSize:16,padding:'6px 19px',marginLeft:4,boxShadow:'0 0.7px 2.2px #7c747c30',cursor:'pointer'}}>조회</button>
+        <button style={COMMON_STYLES.button.search}>조회</button>
       </div>
       <div style={{flex:1,background:'#fff',padding:'0 0 0 0',display:'flex',flexDirection:'column',overflow:'auto'}}>
         <table style={{width:'100%',borderCollapse:'collapse',fontSize:16.7,marginTop:1,border:'1px solid #bcbcbc'}}>
           <thead>
-            <tr style={{background:'#f4f5f5',borderBottom:'2.5px solid #1976d2',color:'#1a5595'}}>
+            <tr style={COMMON_STYLES.tableHeader}>
               <th style={{width:51,padding:'8px 0',border:'1px solid #bcbcbc'}}><input type="checkbox" readOnly /></th>
               <th style={{padding:'8px 0',border:'1px solid #bcbcbc'}}>등록일자</th>
               <th style={{padding:'8px 0',border:'1px solid #bcbcbc'}}>상품코드</th>
@@ -389,16 +379,7 @@ export default function ProductManagement({ products, setProducts, companies }: 
             }}>
               <button
                 onClick={() => setShowLinkedCompaniesModal(false)}
-                style={{
-                  padding: "8px 16px",
-                  backgroundColor: "#1a5595",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: "4px",
-                  cursor: "pointer",
-                  fontSize: "14px",
-                  fontWeight: 500,
-                }}
+                style={COMMON_STYLES.button.primary}
               >
                 닫기
               </button>
