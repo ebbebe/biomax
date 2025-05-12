@@ -3,11 +3,13 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 
 export default function Header() {
   const { user, logout } = useAuth();
   const router = useRouter();
   const [showDevTools, setShowDevTools] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -31,59 +33,80 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-white shadow-sm z-10">
+    <motion.header 
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="bg-white border-b border-gray-200 shadow-sm z-10"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
-          <h1 className="text-2xl font-semibold text-gray-900">바이오맥스 발주시스템</h1>
+          <motion.h1 
+            whileHover={{ scale: 1.02 }}
+            className="text-2xl font-bold text-gray-800 tracking-tight"
+          >
+            바이오맥스 발주시스템
+          </motion.h1>
           <div className="flex items-center">
-            <div className="mr-4">
-              <span className="text-sm text-gray-500">안녕하세요,</span>
-              <span className="ml-1 text-sm font-medium text-gray-900">{user?.name}</span>
-              <span className="ml-2 px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
-                {user?.role === 'admin' ? '관리자' : '사용자'}
-              </span>
-              
-              {/* 개발 도구 토글 버튼 */}
+            <div className="relative">
               <button 
-                onClick={() => setShowDevTools(!showDevTools)}
-                className="ml-2 px-2 py-1 text-xs rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300"
-                title="개발 도구 표시"
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="flex items-center space-x-2 bg-gray-100 hover:bg-gray-200 transition-all duration-200 px-3 py-2 rounded-lg text-gray-700"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <div className="flex flex-col items-end">
+                  <span className="text-sm font-medium">{user?.name || '사용자'}</span>
+                  <span className="text-xs opacity-80">
+                    {user?.role === 'admin' ? '관리자' : '사용자'}
+                  </span>
+                </div>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                 </svg>
               </button>
               
-              {/* 개발 도구 - 역할 전환 버튼 */}
-              {showDevTools && (
-                <div className="ml-2 flex space-x-1">
-                  <button 
-                    onClick={() => switchRole('admin')}
-                    className={`px-2 py-1 text-xs rounded-md ${user?.role === 'admin' ? 'bg-purple-200 text-purple-800' : 'bg-gray-200 text-gray-700 hover:bg-purple-100'}`}
-                    disabled={user?.role === 'admin'}
+              {isDropdownOpen && (
+                <motion.div 
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-1 z-10"
+                >
+                  {/* 개발 도구 - 역할 전환 버튼 */}
+                  <div className="px-4 py-2 border-b border-gray-100">
+                    <p className="text-xs font-medium text-gray-400">개발 도구</p>
+                    <div className="mt-2 grid grid-cols-2 gap-1">
+                      <button 
+                        onClick={() => switchRole('admin')}
+                        className={`px-2 py-1 text-xs rounded-md ${user?.role === 'admin' ? 'bg-indigo-100 text-indigo-700 font-medium' : 'bg-gray-100 text-gray-600 hover:bg-indigo-50'}`}
+                        disabled={user?.role === 'admin'}
+                      >
+                        관리자 모드
+                      </button>
+                      <button 
+                        onClick={() => switchRole('user')}
+                        className={`px-2 py-1 text-xs rounded-md ${user?.role === 'user' ? 'bg-blue-100 text-blue-700 font-medium' : 'bg-gray-100 text-gray-600 hover:bg-blue-50'}`}
+                        disabled={user?.role === 'user'}
+                      >
+                        사용자 모드
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-150"
                   >
-                    관리자 모드
+                    <div className="flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      </svg>
+                      로그아웃
+                    </div>
                   </button>
-                  <button 
-                    onClick={() => switchRole('user')}
-                    className={`px-2 py-1 text-xs rounded-md ${user?.role === 'user' ? 'bg-green-200 text-green-800' : 'bg-gray-200 text-gray-700 hover:bg-green-100'}`}
-                    disabled={user?.role === 'user'}
-                  >
-                    사용자 모드
-                  </button>
-                </div>
+                </motion.div>
               )}
             </div>
-            <button
-              onClick={handleLogout}
-              className="ml-3 px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-            >
-              로그아웃
-            </button>
           </div>
         </div>
       </div>
-    </header>
+    </motion.header>
   );
 }
