@@ -17,7 +17,7 @@ type OrderItem = {
   productName: string;
   quantity: number;
   memo: string;
-  status: 'pending' | 'completed' | 'cancelled';
+  status: 'pending' | 'completed';
   createdAt: string;
 };
 

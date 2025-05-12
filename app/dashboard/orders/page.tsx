@@ -2,18 +2,22 @@
 
 import { useState } from 'react';
 
-type OrderStatus = '승인대기' | '처리중' | '완료' | '취소';
+type OrderStatus = '대기' | '완료';
 
 type Order = {
   id: string;
   date: string;
   status: OrderStatus;
-  total: number;
   customer: string;
+  vendor: {
+    name: string;
+    businessNumber: string;
+    address: string;
+    phoneNumber: string;
+  };
   items: {
     name: string;
     quantity: number;
-    price: number;
   }[];
   note?: string;
 };
@@ -25,33 +29,48 @@ export default function OrdersPage() {
       id: '1001',
       date: '2025-05-10',
       status: '완료',
-      total: 45000,
       customer: '사용자 1',
+      vendor: {
+        name: '주식회사 바이오맥스',
+        businessNumber: '123-45-67890',
+        address: '서울특별시 강남구 테헤란로 123',
+        phoneNumber: '02-1234-5678'
+      },
       items: [
-        { name: '제품 A', quantity: 2, price: 10000 },
-        { name: '제품 B', quantity: 1, price: 25000 },
+        { name: '제품 A', quantity: 2 },
+        { name: '제품 B', quantity: 1 },
       ]
     },
     {
       id: '1002',
       date: '2025-05-11',
-      status: '처리중',
-      total: 38000,
+      status: '대기',
       customer: '사용자 2',
+      vendor: {
+        name: '주식회사 메디플러스',
+        businessNumber: '234-56-78901',
+        address: '경기도 성남시 분당구 분당로 456',
+        phoneNumber: '031-234-5678'
+      },
       items: [
-        { name: '제품 C', quantity: 3, price: 8000 },
-        { name: '제품 D', quantity: 1, price: 15000 },
+        { name: '제품 C', quantity: 3 },
+        { name: '제품 D', quantity: 1 },
       ],
       note: '빠른 배송 부탁드립니다.'
     },
     {
       id: '1003',
       date: '2025-05-12',
-      status: '승인대기',
-      total: 30000,
+      status: '대기',
       customer: '사용자 3',
+      vendor: {
+        name: '주식회사 헤일스케어',
+        businessNumber: '345-67-89012',
+        address: '부산광역시 해운대구 운동장로 789',
+        phoneNumber: '051-345-6789'
+      },
       items: [
-        { name: '제품 E', quantity: 1, price: 30000 },
+        { name: '제품 E', quantity: 1 },
       ]
     },
   ]);
@@ -68,22 +87,14 @@ export default function OrdersPage() {
     }
   };
 
-  const handleStatusChange = (orderId: string, newStatus: OrderStatus) => {
-    setOrders(orders.map(order => 
-      order.id === orderId ? { ...order, status: newStatus } : order
-    ));
-  };
+  // 주문상태변경 기능 삭제
 
   const getStatusColor = (status: OrderStatus) => {
     switch (status) {
-      case '승인대기':
+      case '대기':
         return 'bg-yellow-100 text-yellow-800';
-      case '처리중':
-        return 'bg-blue-100 text-blue-800';
       case '완료':
         return 'bg-green-100 text-green-800';
-      case '취소':
-        return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -132,10 +143,8 @@ export default function OrdersPage() {
             onChange={(e) => setStatusFilter(e.target.value as OrderStatus | 'all')}
           >
             <option value="all">모든 상태</option>
-            <option value="승인대기">승인대기</option>
-            <option value="처리중">처리중</option>
+            <option value="대기">대기</option>
             <option value="완료">완료</option>
-            <option value="취소">취소</option>
           </select>
         </div>
       </div>
@@ -146,148 +155,98 @@ export default function OrdersPage() {
             filteredOrders.map((order) => (
               <li key={order.id}>
                 <div className="block hover:bg-gray-50">
-                  <div className="px-4 py-4 sm:px-6">
+                  <button
+                    onClick={() => toggleOrderDetails(order.id)}
+                    className="w-full px-4 py-4 text-left focus:outline-none"
+                  >
                     <div className="flex items-center justify-between">
-                      <button
-                        onClick={() => toggleOrderDetails(order.id)}
-                        className="text-left w-full flex items-center justify-between"
-                      >
-                        <div className="flex items-center">
-                          <p className="text-sm font-medium text-blue-600 truncate">
-                            주문 #{order.id}
-                          </p>
-                          <span className={`ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(order.status)}`}>
-                            {order.status}
-                          </span>
+                      <div>
+                        <h3 className="text-lg font-medium text-gray-900">
+                          주문 #{order.id}
+                        </h3>
+                        <div className="mt-1 flex items-center space-x-2">
+                          <span className="text-sm text-gray-500">{order.date}</span>
+                          <span className="text-gray-400">|</span>
+                          <span className="text-sm text-gray-500">{order.customer}</span>
                         </div>
-                        <div className="ml-2 flex-shrink-0 flex">
-                          <svg 
-                            className={`h-5 w-5 text-gray-400 transform ${expandedOrder === order.id ? 'rotate-180' : ''}`} 
-                            xmlns="http://www.w3.org/2000/svg" 
-                            viewBox="0 0 20 20" 
-                            fill="currentColor"
-                          >
-                            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                          </svg>
-                        </div>
-                      </button>
-                    </div>
-                    <div className="mt-2 sm:flex sm:justify-between">
-                      <div className="sm:flex">
-                        <p className="flex items-center text-sm text-gray-500">
-                          <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                          </svg>
-                          {order.customer}
-                        </p>
-                        <p className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0 sm:ml-6">
-                          <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                          </svg>
-                          {order.total.toLocaleString()}원
-                        </p>
                       </div>
-                      <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
-                        <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                      <div className="flex items-center">
+                        <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(order.status)}`}>
+                          {order.status}
+                        </span>
+                        <svg className="ml-2 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                         </svg>
-                        <p>
-                          {order.date}
-                        </p>
                       </div>
                     </div>
-                  </div>
+                  </button>
                   
                   {/* 주문 상세 정보 */}
                   {expandedOrder === order.id && (
-                    <div className="border-t border-gray-200 px-4 py-5 sm:px-6 bg-gray-50">
-                      <h3 className="text-lg leading-6 font-medium text-gray-900 mb-2">주문 상세 정보</h3>
+                    <div className="px-4 py-4 border-t border-gray-100">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* 거래처 정보 */}
+                        <div className="bg-white border rounded-md p-4">
+                          <h4 className="text-sm font-medium text-gray-700 mb-3">거래처 정보</h4>
+                          <dl className="space-y-2">
+                            <div>
+                              <dt className="text-xs font-medium text-gray-500">거래처명</dt>
+                              <dd className="mt-1 text-sm text-gray-900">{order.vendor.name}</dd>
+                            </div>
+                            <div>
+                              <dt className="text-xs font-medium text-gray-500">사업자등록번호</dt>
+                              <dd className="mt-1 text-sm text-gray-900">{order.vendor.businessNumber}</dd>
+                            </div>
+                            <div>
+                              <dt className="text-xs font-medium text-gray-500">주소</dt>
+                              <dd className="mt-1 text-sm text-gray-900">{order.vendor.address}</dd>
+                            </div>
+                            <div>
+                              <dt className="text-xs font-medium text-gray-500">전화번호</dt>
+                              <dd className="mt-1 text-sm text-gray-900">{order.vendor.phoneNumber}</dd>
+                            </div>
+                          </dl>
+                        </div>
+                        
+                        {/* 주문 품목 */}
+                        <div className="bg-white border rounded-md p-4">
+                          <h4 className="text-sm font-medium text-gray-700 mb-3">주문 품목</h4>
+                          <div className="overflow-hidden">
+                            <table className="min-w-full">
+                              <thead className="bg-gray-50">
+                                <tr>
+                                  <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500">
+                                    제품명
+                                  </th>
+                                  <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500">
+                                    수량
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-gray-200">
+                                {order.items.map((item, index) => (
+                                  <tr key={index}>
+                                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                                      {item.name}
+                                    </td>
+                                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500">
+                                      {item.quantity}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
                       
+                      {/* 주문 메모 */}
                       {order.note && (
-                        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-100 rounded-md">
-                          <p className="text-sm text-yellow-800">
-                            <span className="font-medium">메모:</span> {order.note}
-                          </p>
+                        <div className="mt-4 bg-gray-50 p-4 rounded-md">
+                          <h4 className="text-sm font-medium text-gray-500 mb-1">주문 메모</h4>
+                          <p className="text-sm text-gray-900">{order.note}</p>
                         </div>
                       )}
-                      
-                      <div className="border rounded-md overflow-hidden">
-                        <table className="min-w-full divide-y divide-gray-200">
-                          <thead className="bg-gray-100">
-                            <tr>
-                              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                제품명
-                              </th>
-                              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                수량
-                              </th>
-                              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                단가
-                              </th>
-                              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                금액
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white divide-y divide-gray-200">
-                            {order.items.map((item, index) => (
-                              <tr key={index}>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                  {item.name}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                  {item.quantity}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                  {item.price.toLocaleString()}원
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                  {(item.price * item.quantity).toLocaleString()}원
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                          <tfoot className="bg-gray-50">
-                            <tr>
-                              <td colSpan={3} className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
-                                총 금액:
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
-                                {order.total.toLocaleString()}원
-                              </td>
-                            </tr>
-                          </tfoot>
-                        </table>
-                      </div>
-                      
-                      <div className="mt-4">
-                        <label htmlFor={`status-${order.id}`} className="block text-sm font-medium text-gray-700 mb-1">
-                          주문 상태 변경
-                        </label>
-                        <div className="flex space-x-2">
-                          <select
-                            id={`status-${order.id}`}
-                            className="block w-full max-w-xs pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-                            value={order.status}
-                            onChange={(e) => handleStatusChange(order.id, e.target.value as OrderStatus)}
-                          >
-                            <option value="승인대기">승인대기</option>
-                            <option value="처리중">처리중</option>
-                            <option value="완료">완료</option>
-                            <option value="취소">취소</option>
-                          </select>
-                          
-                          <button
-                            type="button"
-                            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                          >
-                            <svg className="-ml-0.5 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0v3H7V4h6zm-5 7a1 1 0 100-2 1 1 0 000 2zm0 2a1 1 0 100 2 1 1 0 000-2zm6-2a1 1 0 100-2 1 1 0 000 2zm0 2a1 1 0 100 2 1 1 0 000-2z" clipRule="evenodd" />
-                            </svg>
-                            주문서 출력
-                          </button>
-                        </div>
-                      </div>
                     </div>
                   )}
                 </div>

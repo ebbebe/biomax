@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-type OrderStatus = '승인대기' | '처리중' | '완료' | '취소';
+type OrderStatus = '대기' | '완료';
 
 type Order = {
   id: string;
@@ -32,7 +32,7 @@ export default function OrderHistoryPage() {
     {
       id: '1002',
       date: '2025-05-11',
-      status: '처리중',
+      status: '대기',
       total: 38000,
       items: [
         { name: '제품 C', quantity: 3, price: 8000 },
@@ -42,7 +42,7 @@ export default function OrderHistoryPage() {
     {
       id: '1003',
       date: '2025-05-12',
-      status: '승인대기',
+      status: '대기',
       total: 30000,
       items: [
         { name: '제품 E', quantity: 1, price: 30000 },
@@ -62,14 +62,10 @@ export default function OrderHistoryPage() {
 
   const getStatusColor = (status: OrderStatus) => {
     switch (status) {
-      case '승인대기':
+      case '대기':
         return 'bg-yellow-100 text-yellow-800';
-      case '처리중':
-        return 'bg-blue-100 text-blue-800';
       case '완료':
         return 'bg-green-100 text-green-800';
-      case '취소':
-        return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -190,7 +186,7 @@ export default function OrderHistoryPage() {
                     </div>
                     
                     <div className="mt-4 flex justify-end space-x-3">
-                      {order.status === '승인대기' && (
+                      {order.status === '대기' && (
                         <button
                           type="button"
                           className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
