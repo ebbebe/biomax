@@ -3,22 +3,20 @@
 import { useState } from 'react';
 
 type Product = {
-  id: string;
-  name: string;
-  unit: string;
-  price: number;
-  stock: number;
-  category: string;
+  id: string;        // 내부 ID
+  name: string;      // 상품명
+  code: string;      // 상품코드
+  registDate: string; // 등록일자
 };
 
 export default function ProductsPage() {
   // 샘플 제품 데이터
   const [products, setProducts] = useState<Product[]>([
-    { id: '1', name: '제품 A', unit: 'EA', price: 10000, stock: 50, category: '카테고리 1' },
-    { id: '2', name: '제품 B', unit: 'BOX', price: 25000, stock: 30, category: '카테고리 2' },
-    { id: '3', name: '제품 C', unit: 'KG', price: 8000, stock: 100, category: '카테고리 1' },
-    { id: '4', name: '제품 D', unit: 'EA', price: 15000, stock: 45, category: '카테고리 3' },
-    { id: '5', name: '제품 E', unit: 'BOX', price: 30000, stock: 25, category: '카테고리 2' },
+    { id: '1', name: '상품 A', code: 'P001', registDate: '2025-05-01' },
+    { id: '2', name: '상품 B', code: 'P002', registDate: '2025-05-02' },
+    { id: '3', name: '상품 C', code: 'P003', registDate: '2025-05-05' },
+    { id: '4', name: '상품 D', code: 'P004', registDate: '2025-05-08' },
+    { id: '5', name: '상품 E', code: 'P005', registDate: '2025-05-10' },
   ]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -26,13 +24,14 @@ export default function ProductsPage() {
   const [searchTerm, setSearchTerm] = useState('');
 
   const handleAddNew = () => {
+    // 오늘 날짜 가져오기
+    const today = new Date().toISOString().split('T')[0];
+    
     setCurrentProduct({
       id: '',
       name: '',
-      unit: 'EA',
-      price: 0,
-      stock: 0,
-      category: '',
+      code: '',
+      registDate: today,
     });
     setIsModalOpen(true);
   };
@@ -70,7 +69,7 @@ export default function ProductsPage() {
 
   const filteredProducts = products.filter(product => 
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.category.toLowerCase().includes(searchTerm.toLowerCase())
+    product.code.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -90,7 +89,7 @@ export default function ProductsPage() {
               id="search"
               name="search"
               className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-              placeholder="제품명 또는 카테고리 검색"
+              placeholder="상품명 또는 상품코드 검색"
               type="search"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -115,22 +114,13 @@ export default function ProductsPage() {
           <thead className="bg-gray-50">
             <tr>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                ID
+                상품코드
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                제품명
+                상품명
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                카테고리
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                단위
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                단가
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                재고
+                등록일자
               </th>
               <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 관리
@@ -141,22 +131,13 @@ export default function ProductsPage() {
             {filteredProducts.map((product) => (
               <tr key={product.id}>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {product.id}
+                  {product.code}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                   {product.name}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {product.category}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {product.unit}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {product.price.toLocaleString()}원
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {product.stock}
+                  {product.registDate}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <button
@@ -187,26 +168,46 @@ export default function ProductsPage() {
       
       {/* 제품 추가/수정 모달 */}
       {isModalOpen && currentProduct && (
-        <div className="fixed z-10 inset-0 overflow-y-auto">
+        <div className="fixed z-50 inset-0 overflow-y-auto">
           <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+            {/* 배경 오버레이 */}
+            <div className="fixed inset-0 transition-opacity" aria-hidden="true" onClick={() => {
+              setIsModalOpen(false);
+              setCurrentProduct(null);
+            }}>
               <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
             </div>
 
             <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            {/* 모달 컨텐츠 */}
+            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full relative z-50" onClick={(e) => e.stopPropagation()}>
               <form onSubmit={handleSave}>
                 <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                   <div className="sm:flex sm:items-start">
                     <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
                       <h3 className="text-lg leading-6 font-medium text-gray-900">
-                        {currentProduct.id ? '제품 수정' : '새 제품 추가'}
+                        {currentProduct.id ? '상품 수정' : '새 상품 추가'}
                       </h3>
                       <div className="mt-4 space-y-4">
                         <div>
+                          <label htmlFor="product-code" className="block text-sm font-medium text-gray-700">
+                            상품코드
+                          </label>
+                          <input
+                            type="text"
+                            name="product-code"
+                            id="product-code"
+                            required
+                            className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                            value={currentProduct.code}
+                            onChange={(e) => setCurrentProduct({ ...currentProduct, code: e.target.value })}
+                          />
+                        </div>
+                        
+                        <div>
                           <label htmlFor="product-name" className="block text-sm font-medium text-gray-700">
-                            제품명
+                            상품명
                           </label>
                           <input
                             type="text"
@@ -220,67 +221,17 @@ export default function ProductsPage() {
                         </div>
                         
                         <div>
-                          <label htmlFor="product-category" className="block text-sm font-medium text-gray-700">
-                            카테고리
+                          <label htmlFor="product-registDate" className="block text-sm font-medium text-gray-700">
+                            등록일자
                           </label>
                           <input
-                            type="text"
-                            name="product-category"
-                            id="product-category"
+                            type="date"
+                            name="product-registDate"
+                            id="product-registDate"
                             required
                             className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-                            value={currentProduct.category}
-                            onChange={(e) => setCurrentProduct({ ...currentProduct, category: e.target.value })}
-                          />
-                        </div>
-                        
-                        <div>
-                          <label htmlFor="product-unit" className="block text-sm font-medium text-gray-700">
-                            단위
-                          </label>
-                          <select
-                            id="product-unit"
-                            name="product-unit"
-                            className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                            value={currentProduct.unit}
-                            onChange={(e) => setCurrentProduct({ ...currentProduct, unit: e.target.value })}
-                          >
-                            <option value="EA">EA</option>
-                            <option value="BOX">BOX</option>
-                            <option value="KG">KG</option>
-                            <option value="SET">SET</option>
-                          </select>
-                        </div>
-                        
-                        <div>
-                          <label htmlFor="product-price" className="block text-sm font-medium text-gray-700">
-                            단가 (원)
-                          </label>
-                          <input
-                            type="number"
-                            name="product-price"
-                            id="product-price"
-                            min="0"
-                            required
-                            className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-                            value={currentProduct.price}
-                            onChange={(e) => setCurrentProduct({ ...currentProduct, price: parseInt(e.target.value) || 0 })}
-                          />
-                        </div>
-                        
-                        <div>
-                          <label htmlFor="product-stock" className="block text-sm font-medium text-gray-700">
-                            재고
-                          </label>
-                          <input
-                            type="number"
-                            name="product-stock"
-                            id="product-stock"
-                            min="0"
-                            required
-                            className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-                            value={currentProduct.stock}
-                            onChange={(e) => setCurrentProduct({ ...currentProduct, stock: parseInt(e.target.value) || 0 })}
+                            value={currentProduct.registDate}
+                            onChange={(e) => setCurrentProduct({ ...currentProduct, registDate: e.target.value })}
                           />
                         </div>
                       </div>

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 
 type OrderStatus = '대기' | '완료';
 
@@ -9,6 +10,8 @@ type Order = {
   date: string;
   status: OrderStatus;
   total: number;
+  customerId: string; // 거래처 ID
+  customerName: string; // 거래처명
   items: {
     name: string;
     quantity: number;
@@ -17,13 +20,19 @@ type Order = {
 };
 
 export default function OrderHistoryPage() {
+  const searchParams = useSearchParams();
+  const customerId = searchParams.get('customerId');
+  const customerName = searchParams.get('customerName');
+  
   // 샘플 주문 내역 데이터
-  const [orders] = useState<Order[]>([
+  const [allOrders] = useState<Order[]>([
     {
       id: '1001',
       date: '2025-05-10',
       status: '완료',
       total: 45000,
+      customerId: '2', // 약국A
+      customerName: '약국A',
       items: [
         { name: '제품 A', quantity: 2, price: 10000 },
         { name: '제품 B', quantity: 1, price: 25000 },
@@ -34,6 +43,8 @@ export default function OrderHistoryPage() {
       date: '2025-05-11',
       status: '대기',
       total: 38000,
+      customerId: '3', // 약국B
+      customerName: '약국B',
       items: [
         { name: '제품 C', quantity: 3, price: 8000 },
         { name: '제품 D', quantity: 1, price: 15000 },
@@ -44,11 +55,38 @@ export default function OrderHistoryPage() {
       date: '2025-05-12',
       status: '대기',
       total: 30000,
+      customerId: '2', // 약국A
+      customerName: '약국A',
       items: [
         { name: '제품 E', quantity: 1, price: 30000 },
       ]
     },
+    {
+      id: '1004',
+      date: '2025-05-13',
+      status: '대기',
+      total: 65000,
+      customerId: '4', // 약국C
+      customerName: '약국C',
+      items: [
+        { name: '제품 A', quantity: 3, price: 10000 },
+        { name: '제품 D', quantity: 1, price: 15000 },
+        { name: '제품 B', quantity: 1, price: 25000 },
+      ]
+    },
   ]);
+  
+  // 필터링된 주문 내역
+  const [orders, setOrders] = useState<Order[]>([]);
+  
+  // URL 파라미터에 따라 주문 내역 필터링
+  useEffect(() => {
+    if (customerId) {
+      setOrders(allOrders.filter(order => order.customerId === customerId));
+    } else {
+      setOrders(allOrders);
+    }
+  }, [customerId, allOrders]);
 
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
 
@@ -73,7 +111,21 @@ export default function OrderHistoryPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-gray-900 mb-6">주문내역</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-semibold text-gray-900">주문내역</h1>
+        {customerName && (
+          <div className="bg-blue-50 text-blue-700 px-4 py-2 rounded-md flex items-center">
+            <span className="font-medium">{customerName}</span>
+            <span className="mx-2">의 주문만 표시중</span>
+            <a 
+              href="/dashboard/order-history" 
+              className="text-blue-600 hover:text-blue-800 text-sm underline"
+            >
+              모든 주문 보기
+            </a>
+          </div>
+        )}
+      </div>
       
       <div className="bg-white shadow overflow-hidden sm:rounded-md">
         <ul className="divide-y divide-gray-200">

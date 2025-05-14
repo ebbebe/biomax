@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 
 type UserRole = 'user' | 'admin';
 type UserStatus = 'allowed' | 'blocked';
@@ -287,7 +288,12 @@ export default function UsersPage() {
                         {user.name}
                       </div>
                       <div className="text-sm text-gray-500">
-                        {user.companyName}
+                        <Link 
+                          href={`/dashboard/order-history?customerId=${user.id}&customerName=${encodeURIComponent(user.companyName)}`}
+                          className="hover:text-blue-600 hover:underline cursor-pointer"
+                        >
+                          {user.companyName}
+                        </Link>
                       </div>
                     </div>
                   </div>
