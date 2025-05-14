@@ -9,13 +9,11 @@ type Order = {
   id: string;
   date: string;
   status: OrderStatus;
-  total: number;
   customerId: string; // 거래처 ID
   customerName: string; // 거래처명
   items: {
     name: string;
     quantity: number;
-    price: number;
   }[];
 };
 
@@ -30,48 +28,44 @@ export default function OrderHistoryPage() {
       id: '1001',
       date: '2025-05-10',
       status: '완료',
-      total: 45000,
       customerId: '2', // 약국A
       customerName: '약국A',
       items: [
-        { name: '제품 A', quantity: 2, price: 10000 },
-        { name: '제품 B', quantity: 1, price: 25000 },
+        { name: '제품 A', quantity: 2 },
+        { name: '제품 B', quantity: 1 },
       ]
     },
     {
       id: '1002',
       date: '2025-05-11',
       status: '대기',
-      total: 38000,
       customerId: '3', // 약국B
       customerName: '약국B',
       items: [
-        { name: '제품 C', quantity: 3, price: 8000 },
-        { name: '제품 D', quantity: 1, price: 15000 },
+        { name: '제품 C', quantity: 3 },
+        { name: '제품 D', quantity: 1 },
       ]
     },
     {
       id: '1003',
       date: '2025-05-12',
       status: '대기',
-      total: 30000,
       customerId: '2', // 약국A
       customerName: '약국A',
       items: [
-        { name: '제품 E', quantity: 1, price: 30000 },
+        { name: '제품 E', quantity: 1 },
       ]
     },
     {
       id: '1004',
       date: '2025-05-13',
       status: '대기',
-      total: 65000,
       customerId: '4', // 약국C
       customerName: '약국C',
       items: [
-        { name: '제품 A', quantity: 3, price: 10000 },
-        { name: '제품 D', quantity: 1, price: 15000 },
-        { name: '제품 B', quantity: 1, price: 25000 },
+        { name: '제품 A', quantity: 3 },
+        { name: '제품 D', quantity: 1 },
+        { name: '제품 B', quantity: 1 },
       ]
     },
   ]);
@@ -166,12 +160,7 @@ export default function OrderHistoryPage() {
                         </svg>
                         총 {order.items.length}개 품목
                       </p>
-                      <p className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0 sm:ml-6">
-                        <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                        </svg>
-                        {order.total.toLocaleString()}원
-                      </p>
+
                     </div>
                     <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
                       <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -198,12 +187,6 @@ export default function OrderHistoryPage() {
                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                               수량
                             </th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              단가
-                            </th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              금액
-                            </th>
                           </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
@@ -215,44 +198,13 @@ export default function OrderHistoryPage() {
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 {item.quantity}
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {item.price.toLocaleString()}원
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {(item.price * item.quantity).toLocaleString()}원
-                              </td>
                             </tr>
                           ))}
                         </tbody>
-                        <tfoot className="bg-gray-50">
-                          <tr>
-                            <td colSpan={3} className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
-                              총 금액:
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
-                              {order.total.toLocaleString()}원
-                            </td>
-                          </tr>
-                        </tfoot>
                       </table>
                     </div>
                     
-                    <div className="mt-4 flex justify-end space-x-3">
-                      {order.status === '대기' && (
-                        <button
-                          type="button"
-                          className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                        >
-                          주문 취소
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                      >
-                        주문서 출력
-                      </button>
-                    </div>
+
                   </div>
                 )}
               </div>
