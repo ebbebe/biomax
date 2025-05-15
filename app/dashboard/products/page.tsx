@@ -1,6 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { getProducts, createProduct, updateProduct, deleteProduct } from '@/lib/actions/product';
+import { toast, Toaster } from 'react-hot-toast';
 
 type Product = {
   id: string;        // 내부 ID
@@ -10,18 +12,34 @@ type Product = {
 };
 
 export default function ProductsPage() {
-  // 샘플 제품 데이터
-  const [products, setProducts] = useState<Product[]>([
-    { id: '1', name: '상품 A', code: 'P001', registDate: '2025-05-01' },
-    { id: '2', name: '상품 B', code: 'P002', registDate: '2025-05-02' },
-    { id: '3', name: '상품 C', code: 'P003', registDate: '2025-05-05' },
-    { id: '4', name: '상품 D', code: 'P004', registDate: '2025-05-08' },
-    { id: '5', name: '상품 E', code: 'P005', registDate: '2025-05-10' },
-  ]);
+  // 제품 데이터 상태
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // 제품 목록 가져오기
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        const data = await getProducts();
+        setProducts(data as Product[]);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching products:', err);
+        setError('제품 목록을 가져오는 중 오류가 발생했습니다.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   const handleAddNew = () => {
     // 오늘 날짜 가져오기
@@ -41,30 +59,77 @@ export default function ProductsPage() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm('정말로 이 제품을 삭제하시겠습니까?')) {
-      setProducts(products.filter(product => product.id !== id));
+      try {
+        setLoading(true);
+        const result = await deleteProduct(id);
+        
+        if (result.error) {
+          toast.error(result.error);
+        } else {
+          toast.success('제품이 삭제되었습니다.');
+          // 삭제 후 목록 업데이트
+          setProducts(products.filter(product => product.id !== id));
+        }
+      } catch (err) {
+        console.error('Error deleting product:', err);
+        toast.error('제품 삭제 중 오류가 발생했습니다.');
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!currentProduct) return;
     
-    if (currentProduct.id) {
-      // 기존 제품 수정
-      setProducts(products.map(product => 
-        product.id === currentProduct.id ? currentProduct : product
-      ));
-    } else {
-      // 새 제품 추가
-      const newId = (parseInt(products[products.length - 1]?.id || '0') + 1).toString();
-      setProducts([...products, { ...currentProduct, id: newId }]);
+    try {
+      setIsSubmitting(true);
+      
+      if (currentProduct.id) {
+        // 기존 제품 수정
+        const { id, ...productData } = currentProduct;
+        const result = await updateProduct(id, productData);
+        
+        if (result.error) {
+          toast.error(result.error);
+          return;
+        }
+        
+        toast.success('제품이 업데이트되었습니다.');
+        // 수정 후 목록 업데이트
+        setProducts(products.map(product => 
+          product.id === currentProduct.id ? currentProduct : product
+        ));
+      } else {
+        // 새 제품 추가
+        const { id, ...productData } = currentProduct;
+        const result = await createProduct(productData);
+        
+        if (result.error) {
+          toast.error(result.error);
+          return;
+        }
+        
+        toast.success('새 제품이 추가되었습니다.');
+        // 추가 후 목록 업데이트
+        if (result.id) {
+          const newProduct = { ...currentProduct, id: result.id } as Product;
+          setProducts([...products, newProduct]);
+        }
+      }
+      
+      setIsModalOpen(false);
+      setCurrentProduct(null);
+    } catch (err) {
+      console.error('Error saving product:', err);
+      toast.error('제품 저장 중 오류가 발생했습니다.');
+    } finally {
+      setIsSubmitting(false);
     }
-    
-    setIsModalOpen(false);
-    setCurrentProduct(null);
   };
 
   const filteredProducts = products.filter(product => 
@@ -73,8 +138,24 @@ export default function ProductsPage() {
   );
 
   return (
-    <div>
+    <div className="p-6">
+      <Toaster position="top-right" />
       <h1 className="text-2xl font-semibold text-gray-900 mb-6">품목관리</h1>
+      
+      {error && (
+        <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-red-700">{error}</p>
+            </div>
+          </div>
+        </div>
+      )}
       
       <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center">
         <div className="w-full sm:w-64 mb-4 sm:mb-0">
@@ -109,61 +190,58 @@ export default function ProductsPage() {
         </button>
       </div>
       
-      <div className="bg-white shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                상품코드
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                상품명
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                등록일자
-              </th>
-              <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                관리
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {filteredProducts.map((product) => (
-              <tr key={product.id}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {product.code}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  {product.name}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {product.registDate}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <button
-                    onClick={() => handleEdit(product)}
-                    className="text-blue-600 hover:text-blue-900 mr-4"
-                  >
-                    수정
-                  </button>
-                  <button
-                    onClick={() => handleDelete(product.id)}
-                    className="text-red-600 hover:text-red-900"
-                  >
-                    삭제
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {filteredProducts.length === 0 && (
+      <div className="overflow-x-auto mt-6">
+        {loading ? (
+          <div className="flex justify-center items-center py-10">
+            <svg className="animate-spin -ml-1 mr-3 h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span className="text-gray-700 text-lg">데이터를 불러오는 중...</span>
+          </div>
+        ) : filteredProducts.length === 0 ? (
+          <div className="text-center py-10">
+            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+            </svg>
+            <h3 className="mt-2 text-sm font-medium text-gray-900">제품이 없습니다</h3>
+            <p className="mt-1 text-sm text-gray-500">새 제품을 추가해보세요.</p>
+          </div>
+        ) : (
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
               <tr>
-                <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500">
-                  검색 결과가 없습니다.
-                </td>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상품코드</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상품명</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">등록일자</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">관리</th>
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredProducts.map((product) => (
+                <tr key={product.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{product.code}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{product.name}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{product.registDate}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <button
+                      onClick={() => handleEdit(product)}
+                      className="text-indigo-600 hover:text-indigo-900 mr-4"
+                    >
+                      수정
+                    </button>
+                    <button
+                      onClick={() => handleDelete(product.id)}
+                      className="text-red-600 hover:text-red-900"
+                    >
+                      삭제
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
       
       {/* 제품 추가/수정 모달 */}
@@ -241,9 +319,18 @@ export default function ProductsPage() {
                 <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                   <button
                     type="submit"
-                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
+                    disabled={isSubmitting}
+                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    저장
+                    {isSubmitting ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        처리중...
+                      </>
+                    ) : '저장'}
                   </button>
                   <button
                     type="button"
