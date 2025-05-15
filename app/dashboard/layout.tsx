@@ -1,42 +1,30 @@
-'use client';
-
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '../context/AuthContext';
+import { redirect } from 'next/navigation';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '../api/auth/[...nextauth]/route';
 import Sidebar from './components/Sidebar';
-import Header from './components/Header';
+import AuthHeader from './components/AuthHeader';
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { user, isLoading } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!isLoading && !user) {
-      router.push('/login');
-    }
-  }, [user, isLoading, router]);
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
+  // NextAuth를 사용하여 서버 세션 가져오기
+  const session = await getServerSession(authOptions);
+  
+  // 세션이 없으면 로그인 페이지로 리다이렉트
+  if (!session?.user) {
+    redirect('/login');
   }
-
-  if (!user) {
-    return null; // Will redirect to login
-  }
+  
+  // 사용자 정보 가져오기
+  const user = session.user;
 
   return (
     <div className="flex h-screen bg-gray-100">
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header />
+        <AuthHeader user={user} />
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-6">
           {children}
         </main>

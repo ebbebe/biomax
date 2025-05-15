@@ -1,11 +1,12 @@
 'use client';
 
-import { useAuth } from '../context/AuthContext';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { data: session } = useSession();
+  const user = session?.user;
   
   // 애니메이션 변수
   const container = {

@@ -1,16 +1,16 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
-import { useAuth } from '../context/AuthContext';
 import { motion } from 'framer-motion';
+import { signIn } from 'next-auth/react';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const { login, isLoading } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   
   // 애니메이션 변수
@@ -30,20 +30,46 @@ export default function LoginPage() {
     visible: { y: 0, opacity: 1 }
   };
 
+  // URL 파라미터에서 오류 메시지 확인
+  const searchParams = useSearchParams();
+  const errorType = searchParams.get('error');
+  
+  // useEffect를 사용하여 오류 메시지 처리
+  useEffect(() => {
+    if (errorType === 'CredentialsSignin') {
+      setError('계정 정보가 올바르지 않습니다.');
+    } else if (errorType) {
+      setError('로그인 중 오류가 발생했습니다.');
+    }
+  }, [errorType]);
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setIsLoading(true);
     
-    if (!email || !password) {
-      setError('이메일과 비밀번호를 모두 입력해주세요.');
+    if (!username || !password) {
+      setError('계정 아이디와 비밀번호를 모두 입력해주세요.');
+      setIsLoading(false);
       return;
     }
     
-    const success = await login(email, password);
-    if (success) {
-      router.push('/dashboard');
-    } else {
-      setError('이메일 또는 비밀번호가 올바르지 않습니다.');
+    try {
+      // NextAuth 로그인 호출
+      const result = await signIn('credentials', {
+        username,
+        password,
+        redirect: true,
+        callbackUrl: '/dashboard'
+      });
+      
+      // 리다이렉트 옵션이 true이므로 여기에 도달하지 않음
+      // 오류 처리는 URL 파라미터로 처리됨
+    } catch (err) {
+      setError('로그인 중 오류가 발생했습니다.');
+      console.error('Login error:', err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -79,26 +105,25 @@ export default function LoginPage() {
           >
             <div className="space-y-4">
               <div>
-                <label htmlFor="email-address" className="block text-sm font-medium text-gray-700 mb-1">
-                  이메일 주소
+                <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+                  계정 아이디
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                      <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                      <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                     </svg>
                   </div>
                   <input
-                    id="email-address"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
+                    id="username"
+                    name="username"
+                    type="text"
+                    autoComplete="username"
                     required
                     className="appearance-none block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 sm:text-sm"
-                    placeholder="이메일 주소 입력"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="계정 아이디 입력"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
                   />
                 </div>
               </div>
@@ -167,12 +192,12 @@ export default function LoginPage() {
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div className="bg-white p-2 rounded border border-gray-200">
                 <p className="font-medium text-indigo-600">관리자</p>
-                <p>admin@example.com</p>
+                <p>admin</p>
                 <p>admin123</p>
               </div>
               <div className="bg-white p-2 rounded border border-gray-200">
                 <p className="font-medium text-blue-600">사용자</p>
-                <p>user@example.com</p>
+                <p>user1</p>
                 <p>user123</p>
               </div>
             </div>
