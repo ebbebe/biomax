@@ -22,7 +22,7 @@ export async function getOrders() {
     // 관리자는 모든 주문을, 일반 사용자는 자신의 주문만 볼 수 있음
     const query = user.role === 'admin' ? {} : { customerId: user.id };
     
-    const orders = await ordersCollection.find(query)
+    let orders = await ordersCollection.find(query)
       .sort({ date: -1 }) // 최신순 정렬
       .toArray();
     
@@ -32,10 +32,11 @@ export async function getOrders() {
       status: order.status || '대기',
       customerId: order.customerId || '',
       customerName: order.customerName || '',
-      items: order.items || []
+      items: order.items || [],
+      note: order.note
     }));
   } catch (error) {
-    console.error('주문 목록 조회 오류:', error);
+    console.error('주문 목록 조회, 오류:', error);
     return { error: '주문 목록을 가져오는 중 오류가 발생했습니다.' };
   }
 }
@@ -68,7 +69,8 @@ export async function getOrderById(id: string) {
       status: order.status || '대기',
       customerId: order.customerId || '',
       customerName: order.customerName || '',
-      items: order.items || []
+      items: order.items || [],
+      note: order.note
     };
   } catch (error) {
     console.error('주문 조회 오류:', error);
