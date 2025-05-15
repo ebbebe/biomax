@@ -1,20 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { getOrders } from '@/lib/actions/order';
+import { toast, Toaster } from 'react-hot-toast';
 
-type OrderStatus = '대기' | '완료';
+import { OrderStatus } from '@/lib/types';
 
 type Order = {
   id: string;
   date: string;
   status: OrderStatus;
-  customer: string;
-  vendor: {
-    name: string;
-    businessNumber: string;
-    address: string;
-    phoneNumber: string;
-  };
+  customerId: string;
+  customerName: string;
   items: {
     name: string;
     quantity: number;
@@ -23,61 +20,38 @@ type Order = {
 };
 
 export default function OrdersPage() {
-  // 샘플 주문 데이터
-  const [orders, setOrders] = useState<Order[]>([
-    {
-      id: '1001',
-      date: '2025-05-10',
-      status: '완료',
-      customer: '사용자 1',
-      vendor: {
-        name: '주식회사 바이오맥스',
-        businessNumber: '123-45-67890',
-        address: '서울특별시 강남구 테헤란로 123',
-        phoneNumber: '02-1234-5678'
-      },
-      items: [
-        { name: '제품 A', quantity: 2 },
-        { name: '제품 B', quantity: 1 },
-      ]
-    },
-    {
-      id: '1002',
-      date: '2025-05-11',
-      status: '대기',
-      customer: '사용자 2',
-      vendor: {
-        name: '주식회사 메디플러스',
-        businessNumber: '234-56-78901',
-        address: '경기도 성남시 분당구 분당로 456',
-        phoneNumber: '031-234-5678'
-      },
-      items: [
-        { name: '제품 C', quantity: 3 },
-        { name: '제품 D', quantity: 1 },
-      ],
-      note: '빠른 배송 부탁드립니다.'
-    },
-    {
-      id: '1003',
-      date: '2025-05-12',
-      status: '대기',
-      customer: '사용자 3',
-      vendor: {
-        name: '주식회사 헤일스케어',
-        businessNumber: '345-67-89012',
-        address: '부산광역시 해운대구 운동장로 789',
-        phoneNumber: '051-345-6789'
-      },
-      items: [
-        { name: '제품 E', quantity: 1 },
-      ]
-    },
-  ]);
+  // 주문 데이터 상태
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // 주문 목록 가져오기
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        setLoading(true);
+        const result = await getOrders();
+        
+        if ('error' in result) {
+          setError(result.error);
+        } else {
+          setOrders(result as Order[]);
+          setError(null);
+        }
+      } catch (err) {
+        console.error('Error fetching orders:', err);
+        setError('주문 목록을 가져오는 중 오류가 발생했습니다.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, []);
 
   const toggleOrderDetails = (orderId: string) => {
     if (expandedOrder === orderId) {
@@ -86,8 +60,6 @@ export default function OrdersPage() {
       setExpandedOrder(orderId);
     }
   };
-
-  // 주문상태변경 기능 삭제
 
   const getStatusColor = (status: OrderStatus) => {
     switch (status) {
@@ -104,12 +76,13 @@ export default function OrdersPage() {
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
     const matchesSearch = 
       order.id.includes(searchTerm) || 
-      order.customer.toLowerCase().includes(searchTerm.toLowerCase());
+      order.customerName.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesStatus && matchesSearch;
   });
 
   return (
     <div>
+      <Toaster position="top-center" />
       <h1 className="text-2xl font-semibold text-gray-900 mb-6">주문확인</h1>
       
       <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
@@ -149,116 +122,106 @@ export default function OrdersPage() {
         </div>
       </div>
       
-      <div className="bg-white shadow overflow-hidden sm:rounded-md">
-        <ul className="divide-y divide-gray-200">
-          {filteredOrders.length > 0 ? (
-            filteredOrders.map((order) => (
-              <li key={order.id}>
-                <div className="block hover:bg-gray-50">
-                  <button
-                    onClick={() => toggleOrderDetails(order.id)}
-                    className="w-full px-4 py-4 text-left focus:outline-none"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-lg font-medium text-gray-900">
-                          주문 #{order.id}
-                        </h3>
-                        <div className="mt-1 flex items-center space-x-2">
-                          <span className="text-sm text-gray-500">{order.date}</span>
-                          <span className="text-gray-400">|</span>
-                          <span className="text-sm text-gray-500">{order.customer}</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center">
-                        <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(order.status)}`}>
-                          {order.status}
-                        </span>
-                        <svg className="ml-2 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                        </svg>
-                      </div>
+      {loading ? (
+        <div className="flex justify-center items-center py-12">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
+        </div>
+      ) : error ? (
+        <div className="bg-red-50 p-4 rounded-md">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800">오류 발생</h3>
+              <div className="mt-2 text-sm text-red-700">
+                <p>{error}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-white shadow overflow-hidden rounded-md">
+          <ul className="divide-y divide-gray-200">
+            {filteredOrders.length > 0 ? (
+              filteredOrders.map((order) => (
+                <li key={order.id} className="px-4 py-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">
+                        주문 #{order.id.substring(order.id.length - 4)}
+                      </p>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
+                        {order.status}
+                      </span>
                     </div>
-                  </button>
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => toggleOrderDetails(order.id)}
+                        className="text-sm text-blue-600 hover:text-blue-900"
+                      >
+                        {expandedOrder === order.id ? '접기' : '상세보기'}
+                      </button>
+                    </div>
+                  </div>
                   
                   {/* 주문 상세 정보 */}
                   {expandedOrder === order.id && (
-                    <div className="px-4 py-4 border-t border-gray-100">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {/* 거래처 정보 */}
-                        <div className="bg-white border rounded-md p-4">
-                          <h4 className="text-sm font-medium text-gray-700 mb-3">거래처 정보</h4>
-                          <dl className="space-y-2">
-                            <div>
-                              <dt className="text-xs font-medium text-gray-500">거래처명</dt>
-                              <dd className="mt-1 text-sm text-gray-900">{order.vendor.name}</dd>
-                            </div>
-                            <div>
-                              <dt className="text-xs font-medium text-gray-500">사업자등록번호</dt>
-                              <dd className="mt-1 text-sm text-gray-900">{order.vendor.businessNumber}</dd>
-                            </div>
-                            <div>
-                              <dt className="text-xs font-medium text-gray-500">주소</dt>
-                              <dd className="mt-1 text-sm text-gray-900">{order.vendor.address}</dd>
-                            </div>
-                            <div>
-                              <dt className="text-xs font-medium text-gray-500">전화번호</dt>
-                              <dd className="mt-1 text-sm text-gray-900">{order.vendor.phoneNumber}</dd>
-                            </div>
-                          </dl>
-                        </div>
-                        
-                        {/* 주문 품목 */}
-                        <div className="bg-white border rounded-md p-4">
-                          <h4 className="text-sm font-medium text-gray-700 mb-3">주문 품목</h4>
-                          <div className="overflow-hidden">
-                            <table className="min-w-full">
-                              <thead className="bg-gray-50">
-                                <tr>
-                                  <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500">
-                                    제품명
-                                  </th>
-                                  <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500">
-                                    수량
-                                  </th>
-                                </tr>
-                              </thead>
-                              <tbody className="divide-y divide-gray-200">
-                                {order.items.map((item, index) => (
-                                  <tr key={index}>
-                                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
-                                      {item.name}
-                                    </td>
-                                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500">
-                                      {item.quantity}
-                                    </td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
+                    <div className="mt-2 pt-2 border-t border-gray-200">
+                      <div className="mb-2">
+                        <h4 className="text-sm font-medium text-gray-700">주문 품목</h4>
+                        <table className="min-w-full">
+                          <thead>
+                            <tr>
+                              <th scope="col" className="px-2 py-1 text-left text-xs font-medium text-gray-500">
+                                제품명
+                              </th>
+                              <th scope="col" className="px-2 py-1 text-left text-xs font-medium text-gray-500">
+                                수량
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {order.items.map((item, index) => (
+                              <tr key={index}>
+                                <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
+                                  {item.name}
+                                </td>
+                                <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-500">
+                                  {item.quantity}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      
+                      {/* 고객 정보 */}
+                      <div className="mb-2">
+                        <p className="text-sm text-gray-900">고객명: {order.customerName}</p>
                       </div>
                       
                       {/* 주문 메모 */}
                       {order.note && (
-                        <div className="mt-4 bg-gray-50 p-4 rounded-md">
-                          <h4 className="text-sm font-medium text-gray-500 mb-1">주문 메모</h4>
-                          <p className="text-sm text-gray-900">{order.note}</p>
+                        <div className="mb-2">
+                          <p className="text-sm text-gray-900">메모: {order.note}</p>
                         </div>
                       )}
                     </div>
                   )}
-                </div>
+                </li>
+              ))
+            ) : (
+              <li className="px-4 py-6 text-center text-gray-500">
+                검색 결과가 없습니다.
               </li>
-            ))
-          ) : (
-            <li className="px-4 py-6 text-center text-gray-500">
-              검색 결과가 없습니다.
-            </li>
-          )}
-        </ul>
-      </div>
+            )}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }

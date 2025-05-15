@@ -33,6 +33,7 @@ export type OrderStatus = '대기' | '완료';
 
 // 주문 항목 타입
 export type OrderItem = {
+  id: string;
   name: string;
   quantity: number;
 };
@@ -45,4 +46,5 @@ export type Order = {
   customerId: string;
   customerName: string;
   items: OrderItem[];
+  note?: string;
 };
