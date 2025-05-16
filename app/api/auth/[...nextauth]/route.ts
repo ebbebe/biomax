@@ -4,6 +4,7 @@ import { getCollection, collections } from "@/lib/mongodb";
 import { JWT } from "next-auth/jwt";
 import { Session } from "next-auth";
 import { UserRole } from "@/lib/types";
+import bcrypt from "bcryptjs";
 
 // NextAuth 설정
 export const authOptions: NextAuthOptions = {
@@ -20,14 +21,23 @@ export const authOptions: NextAuthOptions = {
         }
 
         try {
-          // MongoDB에서 사용자 조회
+          // MongoDB에서 사용자 조회 (username으로만 검색)
           const usersCollection = await getCollection(collections.users);
           const user = await usersCollection.findOne({ 
-            username: credentials.username,
-            password: credentials.password // 실제로는 해싱된 비밀번호를 비교해야 함
+            username: credentials.username
           });
 
           if (!user) {
+            return null;
+          }
+
+          // 비밀번호 검증
+          const isPasswordValid = await bcrypt.compare(
+            credentials.password,
+            user.password
+          );
+
+          if (!isPasswordValid) {
             return null;
           }
 

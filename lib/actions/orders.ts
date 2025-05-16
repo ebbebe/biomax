@@ -4,6 +4,38 @@ import { getCollection, collections } from '@/lib/mongodb';
 import { Order, OrderStatus } from '@/lib/types';
 import { ObjectId } from 'mongodb';
 
+// 최근 주문 목록 조회
+export async function getRecentOrders(limit: number = 5, userId?: string) {
+  try {
+    const ordersCollection = await getCollection(collections.orders);
+    
+    // 필터 조건 설정 (userId가 있으면 해당 사용자 주문만, 없으면 모든 주문)
+    const filter = userId ? { user_id: userId } : {};
+    
+    const orders = await ordersCollection
+      .find(filter)
+      .sort({ order_date: -1 }) // 최신 날짜 기준 정렬
+      .limit(limit)
+      .toArray();
+    
+    // _id를 id로 변환하고 필드명 변환
+    return orders.map(order => {
+      const { _id, user_id, customer_name, order_date, company_name, ...rest } = order;
+      return { 
+        id: _id.toString(), 
+        customerId: user_id,
+        customerName: customer_name,
+        companyName: company_name,
+        date: order_date,
+        ...rest 
+      } as Order;
+    });
+  } catch (error) {
+    console.error('최근 주문 목록 조회 오류:', error);
+    throw new Error('최근 주문 목록을 가져오는 중 오류가 발생했습니다.');
+  }
+}
+
 // 모든 주문 목록 조회
 export async function getAllOrders() {
   try {
@@ -48,7 +80,7 @@ export async function getOrdersByCustomerId(customerId: string) {
 export async function getOrderById(orderId: string) {
   try {
     const ordersCollection = await getCollection(collections.orders);
-    const order = await ordersCollection.findOne({ _id: orderId });
+    const order = await ordersCollection.findOne({ _id: new ObjectId(orderId) });
     
     if (!order) {
       return null;
@@ -75,7 +107,7 @@ export async function updateOrderStatus(orderId: string, status: OrderStatus) {
     const ordersCollection = await getCollection(collections.orders);
     
     const result = await ordersCollection.updateOne(
-      { _id: orderId },
+      { _id: new ObjectId(orderId) },
       { 
         $set: { 
           status,
