@@ -79,7 +79,7 @@ export default function LoginPage() {
     setError('');
     
     const credentials = {
-      admin: { username: 'admin', password: 'admin123' },
+      admin: { username: 'admin', password: '1234' },
       user: { username: 'user1', password: '1234' }
     };
     
@@ -225,7 +225,7 @@ export default function LoginPage() {
               >
                 <p className="font-medium text-indigo-600 mb-1">관리자</p>
                 <p className="text-xs text-gray-600">admin</p>
-                <p className="text-xs text-gray-600">admin123</p>
+                <p className="text-xs text-gray-600">1234</p>
               </motion.button>
               
               <motion.button

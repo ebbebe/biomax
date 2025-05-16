@@ -64,7 +64,7 @@ export async function createProduct(productData: Omit<Product, 'id'>) {
     
     const newProduct = {
       ...productData,
-      registDate: new Date().toISOString()
+      registDate: new Date().toISOString().split('T')[0]
     };
     
     const result = await productsCollection.insertOne(newProduct);

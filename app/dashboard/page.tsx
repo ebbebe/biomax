@@ -221,7 +221,7 @@ export default function Dashboard() {
                         </div>
                         <div>
                           <p className="text-sm font-medium text-gray-900">
-                            주문 #{order.id.substring(0, 8)} - {order.customerName}
+                            주문 #{order.id.substring(0, 8)}
                           </p>
                           <p className="text-xs text-gray-500 mt-0.5">
                             품목 수량: {order.items?.length || 0} | {order.companyName || '개인'}
