@@ -80,7 +80,7 @@ export default function LoginPage() {
     
     const credentials = {
       admin: { username: 'admin', password: 'admin123' },
-      user: { username: 'user1', password: 'user123' }
+      user: { username: 'user1', password: '1234' }
     };
     
     const { username: autoUsername, password: autoPassword } = credentials[userType];
@@ -237,7 +237,7 @@ export default function LoginPage() {
               >
                 <p className="font-medium text-blue-600 mb-1">사용자</p>
                 <p className="text-xs text-gray-600">user1</p>
-                <p className="text-xs text-gray-600">user123</p>
+                <p className="text-xs text-gray-600">1234</p>
               </motion.button>
             </div>
           </motion.div>

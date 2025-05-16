@@ -36,6 +36,7 @@ export type OrderItem = {
   id: string;
   name: string;
   quantity: number;
+  registDate?: string;
 };
 
 // 주문 타입

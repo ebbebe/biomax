@@ -114,7 +114,7 @@ export async function createOrder(orderData: {
 
 /**
  * 주문을 삭제합니다.
- * 관리자만 주문을 삭제할 수 있습니다.
+ * 사용자는 자신의 주문만 삭제할 수 있습니다.
  */
 export async function deleteOrder(id: string) {
   try {
@@ -123,12 +123,20 @@ export async function deleteOrder(id: string) {
       return { error: '인증되지 않은 사용자입니다.' };
     }
     
-    // 관리자만 주문 삭제 가능
-    if (user.role !== 'admin') {
-      return { error: '주문을 삭제할 권한이 없습니다.' };
-    }
-
+    // 관리자 권한 체크 제거
+    // 대신 사용자는 자신의 주문만 삭제할 수 있도록 제한
     const ordersCollection = await getCollection(collections.orders);
+    
+    // 삭제할 주문 조회
+    const orderToDelete = await ordersCollection.findOne({ _id: new ObjectId(id) });
+    if (!orderToDelete) {
+      return { error: '주문을 찾을 수 없습니다.' };
+    }
+    
+    // 자신의 주문인지 확인 (관리자는 모든 주문 삭제 가능)
+    if (user.role !== 'admin' && orderToDelete.customerId !== user.id) {
+      return { error: '자신의 주문만 삭제할 수 있습니다.' };
+    }
     
     const result = await ordersCollection.deleteOne({ _id: new ObjectId(id) });
     
@@ -138,10 +146,44 @@ export async function deleteOrder(id: string) {
     
     // 캐시 갱신
     revalidatePath('/dashboard/orders');
+    revalidatePath('/dashboard/order-history');
     
     return { success: true };
   } catch (error) {
     console.error('주문 삭제 오류:', error);
     return { error: '주문을 삭제하는 중 오류가 발생했습니다.' };
+  }
+}
+
+/**
+ * 주문 상태를 업데이트합니다.
+ * 완료 상태로 변경할 수 있습니다.
+ */
+export async function updateOrderStatus(id: string, status: OrderStatus) {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return { error: '인증되지 않은 사용자입니다.' };
+    }
+
+    const ordersCollection = await getCollection(collections.orders);
+    
+    const result = await ordersCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { status } }
+    );
+    
+    if (result.matchedCount === 0) {
+      return { error: '주문을 찾을 수 없습니다.' };
+    }
+    
+    // 캐시 갱신
+    revalidatePath('/dashboard/orders');
+    revalidatePath('/dashboard/order-history');
+    
+    return { success: true };
+  } catch (error) {
+    console.error('주문 상태 업데이트 오류:', error);
+    return { error: '주문 상태를 업데이트하는 중 오류가 발생했습니다.' };
   }
 }

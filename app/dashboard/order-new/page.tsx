@@ -3,20 +3,39 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getProducts } from '@/lib/actions/product';
-import { createOrder } from '@/lib/actions/order';
+import { createOrder, updateOrderStatus, getOrders, deleteOrder } from '@/lib/actions/order';
 import { toast, Toaster } from 'react-hot-toast';
+import { Order, OrderStatus } from '@/lib/types';
+
+// 날짜를 yyyy-MM-dd 형식으로 변환하는 함수
+const formatDate = (dateString?: string) => {
+  if (!dateString) return '-';
+  
+  // ISO 문자열인 경우 (yyyy-MM-ddTHH:mm:ss.sssZ)
+  if (dateString.includes('T')) {
+    return dateString.split('T')[0];
+  }
+  
+  return dateString;
+};
 
 type Product = {
   id: string;
   name: string;
   code: string;
   quantity: number;
+  registDate?: string;
 };
 
 type OrderItem = {
   id: string;
   name: string;
   quantity: number;
+  registDate?: string;
+};
+
+type ProcessingOrder = Order & {
+  checked: boolean;
 };
 
 export default function OrderNewPage() {
@@ -29,6 +48,10 @@ export default function OrderNewPage() {
   
   // 주문 아이템 목록
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
+  
+  // 대기중인 주문 목록
+  const [pendingOrders, setPendingOrders] = useState<ProcessingOrder[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(false);
   
   // 메모 입력값
   const [note, setNote] = useState('');
@@ -61,7 +84,34 @@ export default function OrderNewPage() {
     };
 
     fetchProducts();
+    fetchPendingOrders();
   }, []);
+
+  // 대기 상태 주문 목록 가져오기
+  const fetchPendingOrders = async () => {
+    try {
+      setLoadingOrders(true);
+      const result = await getOrders();
+      
+      if ('error' in result) {
+        toast.error(result.error as string);
+      } else {
+        // 대기 상태 주문만 필터링 및 체크박스 필드 추가
+        const pendingOrdersWithChecked = result
+          .filter(order => order.status === '대기')
+          .map(order => ({
+            ...order,
+            checked: false
+          }));
+        setPendingOrders(pendingOrdersWithChecked);
+      }
+    } catch (err) {
+      console.error('Error fetching pending orders:', err);
+      toast.error('대기중인 주문 목록을 불러오는데 실패했습니다.');
+    } finally {
+      setLoadingOrders(false);
+    }
+  };
 
   // 수량 변경 처리
   const handleQuantityChange = (id: string, quantity: number) => {
@@ -72,8 +122,8 @@ export default function OrderNewPage() {
     ));
   };
 
-  // 제품 추가 처리
-  const handleAddProduct = (productId: string) => {
+  // 제품 추가 처리 - 자동으로 대기상태로 주문 생성
+  const handleAddProduct = async (productId: string) => {
     const product = products.find(p => p.id === productId);
     
     if (!product || product.quantity <= 0) {
@@ -85,80 +135,142 @@ export default function OrderNewPage() {
     const newOrderItem = {
       id: product.id,
       name: product.name,
-      quantity: product.quantity
+      quantity: product.quantity,
+      registDate: product.registDate
     };
     
-    // 이미 같은 제품이 있는지 확인
-    const existingItemIndex = orderItems.findIndex(item => item.id === product.id);
-    
-    if (existingItemIndex >= 0) {
-      // 기존 아이템 수량 업데이트
-      const updatedItems = [...orderItems];
-      updatedItems[existingItemIndex].quantity += product.quantity;
-      setOrderItems(updatedItems);
-    } else {
-      // 새 아이템 추가
-      setOrderItems(prev => [...prev, newOrderItem]);
-    }
-    
-    // 해당 제품만 초기화
-    setProducts(products.map(p => 
-      p.id === productId ? { ...p, quantity: 0 } : p
-    ));
-    
-    toast.success('제품이 주문 목록에 추가되었습니다.');
-  };
-  
-  // 주문 제출 처리
-  const handleSubmitOrder = async () => {
-    if (orderItems.length === 0) {
-      toast.error('주문할 제품을 추가해주세요.');
-      return;
-    }
+    // 새 주문 아이템을 목록에 추가
+    setOrderItems(prev => [...prev, newOrderItem]);
     
     setIsSubmitting(true);
     
     try {
+      // 대기 상태로 주문 바로 생성
       const result = await createOrder({
-        items: orderItems,
+        items: [newOrderItem],
         note: note || undefined
       });
       
       if ('error' in result) {
         toast.error(result.error as string);
       } else {
-        toast.success('주문이 성공적으로 등록되었습니다.');
-        // 주문 성공 후 초기화
-        setOrderItems([]);
+        toast.success('제품이 주문 목록에 추가되었습니다.');
+        
+        // 해당 제품만 초기화
+        setProducts(products.map(p => 
+          p.id === productId ? { ...p, quantity: 0 } : p
+        ));
+        
+        // 메모 초기화
         setNote('');
         
-        // 주문 목록 페이지로 이동
-        router.push('/dashboard/orders');
+        // 주문 목록 새로고침
+        fetchPendingOrders();
       }
     } catch (err) {
-      console.error('Error submitting order:', err);
+      console.error('Error adding order:', err);
       toast.error('주문 등록 중 오류가 발생했습니다.');
     } finally {
       setIsSubmitting(false);
     }
   };
   
-  // 주문 아이템 삭제 처리
-  const handleRemoveItem = (id: string) => {
-    setOrderItems(orderItems.filter(item => item.id !== id));
-    toast.success('제품이 주문 목록에서 제거되었습니다.');
+  // 체크박스 변경 처리
+  const handleCheckOrder = (id: string, checked: boolean) => {
+    setPendingOrders(pendingOrders.map(order => 
+      order.id === id ? { ...order, checked } : order
+    ));
   };
   
-  // 주문 아이템 수량 변경 처리
-  const handleItemQuantityChange = (id: string, quantity: number) => {
-    if (quantity <= 0) {
-      handleRemoveItem(id);
+  // 모든 주문 체크/체크해제
+  const handleCheckAllOrders = (checked: boolean) => {
+    setPendingOrders(pendingOrders.map(order => ({ ...order, checked })));
+  };
+  
+  // 선택된 주문의 상태를 완료로 변경
+  const handleCompleteOrders = async () => {
+    const selectedOrders = pendingOrders.filter(order => order.checked);
+    
+    if (selectedOrders.length === 0) {
+      toast.error('완료할 주문을 선택해주세요.');
       return;
     }
     
-    setOrderItems(orderItems.map(item => 
-      item.id === id ? { ...item, quantity } : item
-    ));
+    setIsSubmitting(true);
+    
+    try {
+      // 각 주문의 상태를 완료로 변경
+      for (const order of selectedOrders) {
+        const result = await updateOrderStatus(order.id, '완료');
+        
+        if ('error' in result) {
+          toast.error(`주문 ${order.id} 처리 중 오류: ${result.error}`);
+        }
+      }
+      
+      toast.success('선택한 주문이 완료 처리되었습니다.');
+      
+      // 주문 목록 새로고침
+      fetchPendingOrders();
+    } catch (err) {
+      console.error('Error completing orders:', err);
+      toast.error('주문 완료 처리 중 오류가 발생했습니다.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  // 선택된 주문을 삭제
+  const handleDeleteOrders = async () => {
+    const selectedOrders = pendingOrders.filter(order => order.checked);
+    
+    if (selectedOrders.length === 0) {
+      toast.error('삭제할 주문을 선택해주세요.');
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      // 각 주문 삭제
+      let successCount = 0;
+      let errorCount = 0;
+      
+      for (const order of selectedOrders) {
+        const result = await deleteOrder(order.id);
+        
+        if ('error' in result) {
+          errorCount++;
+          toast.error(`주문 삭제 오류: ${result.error}`, {
+            duration: 3000,
+          });
+        } else {
+          successCount++;
+        }
+      }
+      
+      if (successCount > 0) {
+        toast.success(`${successCount}개의 주문이 삭제되었습니다.`, {
+          duration: 3000,
+        });
+      }
+      
+      if (errorCount > 0) {
+        toast.error(`${errorCount}개의 주문 삭제에 실패했습니다.`, {
+          duration: 3000,
+        });
+      }
+      
+      // 주문 목록 새로고침
+      fetchPendingOrders();
+    } catch (err) {
+      console.error('Error deleting orders:', err);
+      toast.error('주문 삭제 중 오류가 발생했습니다.', {
+        duration: 3000,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -207,7 +319,7 @@ export default function OrderNewPage() {
                 제품 선택
               </h3>
               <p className="mt-1 max-w-2xl text-sm text-gray-500">
-                주문할 제품을 선택하고 수량을 입력해주세요.
+                주문할 제품을 선택하고 수량을 입력해주세요. 추가하면 자동으로 대기상태로 주문됩니다.
               </p>
             </div>
             <div className="border-t border-gray-200">
@@ -271,10 +383,10 @@ export default function OrderNewPage() {
                           <button
                             type="button"
                             onClick={() => handleAddProduct(product.id)}
-                            disabled={product.quantity <= 0}
-                            className={`inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white ${product.quantity > 0 ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-300 cursor-not-allowed'} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
+                            disabled={product.quantity <= 0 || isSubmitting}
+                            className={`inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white ${product.quantity > 0 && !isSubmitting ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-300 cursor-not-allowed'} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
                           >
-                            주문추가
+                            {isSubmitting ? '처리중...' : '주문추가'}
                           </button>
                         </td>
                       </tr>
@@ -283,33 +395,85 @@ export default function OrderNewPage() {
                 </table>
               </div>
             </div>
-            
-
+          </div>
+          
+          {/* 메모 입력 영역 */}
+          <div className="bg-white shadow overflow-hidden rounded-md mb-6">
+            <div className="px-4 py-5 sm:px-6 bg-gray-50">
+              <h3 className="text-lg leading-6 font-medium text-gray-900">
+                주문 메모
+              </h3>
+              <p className="mt-1 max-w-2xl text-sm text-gray-500">
+                주문에 대한 메모를 입력해주세요. 제품 추가 시 함께 저장됩니다.
+              </p>
+            </div>
+            <div className="px-4 py-4 border-t border-gray-200">
+              <div className="flex flex-col">
+                <div className="flex-grow">
+                  <textarea
+                    name="note"
+                    id="note"
+                    rows={3}
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    placeholder="배송 시 요청사항이나 기타 메모를 입력하세요."
+                  />
+                </div>
+              </div>
+            </div>
           </div>
           
           {/* 주문 목록 */}
-          {orderItems.length > 0 && (
-            <div className="bg-white shadow overflow-hidden rounded-md mb-6">
-              <div className="px-4 py-5 sm:px-6 bg-gray-50 flex justify-between items-center">
-                <div>
-                  <h3 className="text-lg leading-6 font-medium text-gray-900">주문 목록</h3>
-                  <p className="mt-1 max-w-2xl text-sm text-gray-500">주문할 제품 목록입니다.</p>
-                </div>
+          <div className="bg-white shadow overflow-hidden rounded-md mb-6">
+            <div className="px-4 py-5 sm:px-6 bg-gray-50 flex justify-between items-center">
+              <div>
+                <h3 className="text-lg leading-6 font-medium text-gray-900">주문 목록</h3>
+                <p className="mt-1 max-w-2xl text-sm text-gray-500">대기중인 주문 목록입니다. 체크박스로 선택한 주문을 완료 처리할 수 있습니다.</p>
+              </div>
+              <div className="flex space-x-2">
                 <button
                   type="button"
-                  onClick={handleSubmitOrder}
-                  disabled={isSubmitting || orderItems.length === 0}
+                  onClick={handleDeleteOrders}
+                  disabled={isSubmitting || pendingOrders.filter(o => o.checked).length === 0}
+                  className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:bg-red-300"
+                >
+                  {isSubmitting ? '처리중...' : '선택 주문 삭제'}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCompleteOrders}
+                  disabled={isSubmitting || pendingOrders.filter(o => o.checked).length === 0}
                   className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:bg-green-300"
                 >
-                  주문제출
+                  {isSubmitting ? '처리중...' : '선택 주문 완료처리'}
                 </button>
               </div>
-              
-              <div className="border-t border-gray-200">
+            </div>
+            
+            <div className="border-t border-gray-200">
+              {loadingOrders ? (
+                <div className="flex justify-center items-center py-12">
+                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
+                </div>
+              ) : pendingOrders.length > 0 ? (
                 <div className="max-h-[300px] overflow-auto">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50 sticky top-0 z-10">
                       <tr>
+                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <div className="flex items-center">
+                            <input
+                              id="select-all"
+                              name="select-all"
+                              type="checkbox"
+                              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                              checked={pendingOrders.length > 0 && pendingOrders.every(order => order.checked)}
+                              onChange={(e) => handleCheckAllOrders(e.target.checked)}
+                            />
+                           
+                          </div>
+                        </th>
                         <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           제품명
                         </th>
@@ -317,85 +481,63 @@ export default function OrderNewPage() {
                           수량
                         </th>
                         <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          작업
+                          등록일
+                        </th>
+                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          메모
+                        </th>
+                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          상태
                         </th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {orderItems.map((item) => (
-                        <tr key={item.id}>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {item.name}
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap">
-                            <div className="flex items-center">
-                              <button
-                                type="button"
-                                onClick={() => handleItemQuantityChange(item.id, Math.max(0, item.quantity - 1))}
-                                className="p-1 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300"
-                              >
-                                <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                  <path fillRule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
-                                </svg>
-                              </button>
+                      {pendingOrders.map((order) => (
+                        order.items.map((item, index) => (
+                          <tr key={`${order.id}-${index}`} className={order.checked ? 'bg-blue-50' : ''}>
+                            <td className="px-4 py-4 whitespace-nowrap">
                               <input
-                                type="number"
-                                min="1"
-                                value={item.quantity}
-                                onChange={(e) => handleItemQuantityChange(item.id, parseInt(e.target.value) || 0)}
-                                className="mx-2 w-16 text-center border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                id={`select-order-${order.id}`}
+                                name={`select-order-${order.id}`}
+                                type="checkbox"
+                                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                checked={order.checked}
+                                onChange={(e) => handleCheckOrder(order.id, e.target.checked)}
                               />
-                              <button
-                                type="button"
-                                onClick={() => handleItemQuantityChange(item.id, item.quantity + 1)}
-                                className="p-1 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300"
-                              >
-                                <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                  <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-                                </svg>
-                              </button>
-                            </div>
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveItem(item.id)}
-                              className="text-red-600 hover:text-red-900"
-                            >
-                              삭제
-                            </button>
-                          </td>
-                        </tr>
+                            </td>
+                            <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                              {item.name}
+                            </td>
+                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {item.quantity}
+                            </td>
+                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {item.registDate ? formatDate(item.registDate) : '-'}
+                            </td>
+                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {order.note || '-'}
+                            </td>
+                            <td className="px-4 py-4 whitespace-nowrap">
+                              <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                대기
+                              </span>
+                            </td>
+                          </tr>
+                        ))
                       ))}
                     </tbody>
                   </table>
                 </div>
-              </div>
-              
-              <div className="px-4 py-4 sm:px-6 bg-gray-50 border-t border-gray-200">
-                <div className="flex flex-col sm:flex-row sm:items-center">
-                  <div className="flex-grow mb-3 sm:mb-0">
-                    <label htmlFor="note" className="block text-sm font-medium text-gray-700">
-                      주문 메모
-                    </label>
-                    <div className="mt-1">
-                      <textarea
-                        name="note"
-                        id="note"
-                        rows={3}
-                        value={note}
-                        onChange={(e) => setNote(e.target.value)}
-                        className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                        placeholder="배송 시 요청사항이나 기타 메모를 입력하세요."
-                      />
-                    </div>
-                  </div>
+              ) : (
+                <div className="py-8 text-center text-gray-500">
+                  대기중인 주문이 없습니다.
                 </div>
-              </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       )}
     </div>
   );
 }
+
