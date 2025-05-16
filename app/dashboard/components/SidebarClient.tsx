@@ -172,10 +172,13 @@ export default function SidebarClient({ user }: { user: User }) {
         
         <div className="mt-10 px-3 py-4">
           <div className="bg-gray-700 rounded-lg p-3">
-            <h3 className="text-xs font-medium text-gray-300 uppercase tracking-wider">시스템 정보</h3>
+            <h3 className="text-xs font-medium text-gray-300 uppercase tracking-wider">계정 정보</h3>
             <div className="mt-2 text-xs text-gray-400 space-y-1">
-              <p>버전: 1.0.0</p>
-              <p>최종 업데이트: {new Date().toLocaleDateString('ko-KR')}</p>
+              <p>이름: {user.name}</p>
+              {user.companyName && <p>회사: {user.companyName}</p>}
+              {user.phone && <p>연락처: {user.phone}</p>}
+              <p>계정: {user.username}</p>
+              <p>권한: {user.role === 'admin' ? '관리자' : '사용자'}</p>
             </div>
           </div>
         </div>
