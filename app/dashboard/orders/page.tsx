@@ -3,21 +3,9 @@
 import { useState, useEffect } from 'react';
 import { getOrders } from '@/lib/actions/order';
 import { toast, Toaster } from 'react-hot-toast';
+import { formatDate } from '@/lib/utils';
 
-import { OrderStatus } from '@/lib/types';
-
-type Order = {
-  id: string;
-  date: string;
-  status: OrderStatus;
-  customerId: string;
-  customerName: string;
-  items: {
-    name: string;
-    quantity: number;
-  }[];
-  note?: string;
-};
+import { Order, OrderStatus } from '@/lib/types';
 
 export default function OrdersPage() {
   // 주문 데이터 상태
@@ -76,6 +64,7 @@ export default function OrdersPage() {
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
     const matchesSearch = 
       order.id.includes(searchTerm) || 
+      (order.companyName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
       order.customerName.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesStatus && matchesSearch;
   });
@@ -98,7 +87,7 @@ export default function OrdersPage() {
               id="search"
               name="search"
               className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-              placeholder="주문번호 또는 고객명 검색"
+              placeholder="주문번호 또는 사업자명 검색"
               type="search"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -153,9 +142,12 @@ export default function OrdersPage() {
                       <p className="text-sm font-medium text-gray-900">
                         주문 #{order.id.substring(order.id.length - 4)}
                       </p>
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
-                        {order.status}
-                      </span>
+                      <div className="flex items-center text-xs text-gray-500">
+                        <span className="mr-2">{order.companyName || "사업자명 없음"}</span>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
+                          {order.status}
+                        </span>
+                      </div>
                     </div>
                     <div>
                       <button
@@ -201,6 +193,7 @@ export default function OrdersPage() {
                       
                       {/* 고객 정보 */}
                       <div className="mb-2">
+                        <p className="text-sm text-gray-900">사업자명: {order.companyName || "사업자명 없음"}</p>
                         <p className="text-sm text-gray-900">고객명: {order.customerName}</p>
                       </div>
                       
@@ -215,7 +208,7 @@ export default function OrdersPage() {
                 </li>
               ))
             ) : (
-              <li className="px-4 py-6 text-center text-gray-500">
+              <li className="py-4 px-6 text-center text-gray-500">
                 검색 결과가 없습니다.
               </li>
             )}

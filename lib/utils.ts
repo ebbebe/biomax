@@ -12,6 +12,7 @@ export function documentToOrder(doc: any): Order {
     status: doc.status || '대기',
     customerId: doc.customerId || '',
     customerName: doc.customerName || '',
+    companyName: doc.companyName || '',
     items: doc.items || [],
     note: doc.note
   };

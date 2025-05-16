@@ -84,6 +84,7 @@ export async function createOrder(orderData: {
       status: '대기' as OrderStatus,
       customerId: user.id,
       customerName: orderData.customerName || user.name,
+      companyName: user.companyName,
       items: orderData.items,
       note: orderData.note
     };

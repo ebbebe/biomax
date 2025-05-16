@@ -73,6 +73,32 @@ export default function LoginPage() {
     }
   };
 
+  // 자동 로그인 함수
+  const handleAutoLogin = async (userType: 'admin' | 'user') => {
+    setIsLoading(true);
+    setError('');
+    
+    const credentials = {
+      admin: { username: 'admin', password: 'admin123' },
+      user: { username: 'user1', password: 'user123' }
+    };
+    
+    const { username: autoUsername, password: autoPassword } = credentials[userType];
+    
+    try {
+      await signIn('credentials', {
+        username: autoUsername,
+        password: autoPassword,
+        redirect: true,
+        callbackUrl: '/dashboard'
+      });
+    } catch (err) {
+      setError('로그인 중 오류가 발생했습니다.');
+      console.error('Auto login error:', err);
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <motion.div 
@@ -188,18 +214,31 @@ export default function LoginPage() {
             className="mt-6 text-sm text-center text-gray-500 bg-gray-50 p-3 rounded-lg"
             variants={itemVariants}
           >
-            <p className="font-medium text-gray-600 mb-1">테스트 계정</p>
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="bg-white p-2 rounded border border-gray-200">
-                <p className="font-medium text-indigo-600">관리자</p>
-                <p>admin</p>
-                <p>admin123</p>
-              </div>
-              <div className="bg-white p-2 rounded border border-gray-200">
-                <p className="font-medium text-blue-600">사용자</p>
-                <p>user1</p>
-                <p>user123</p>
-              </div>
+            <p className="font-medium text-gray-600 mb-2">테스트 계정으로 로그인</p>
+            <div className="grid grid-cols-2 gap-2">
+              <motion.button
+                onClick={() => handleAutoLogin('admin')}
+                disabled={isLoading}
+                className="bg-white p-2 rounded border border-gray-200 hover:bg-indigo-50 hover:border-indigo-200 transition-all duration-200 flex flex-col items-center"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <p className="font-medium text-indigo-600 mb-1">관리자</p>
+                <p className="text-xs text-gray-600">admin</p>
+                <p className="text-xs text-gray-600">admin123</p>
+              </motion.button>
+              
+              <motion.button
+                onClick={() => handleAutoLogin('user')}
+                disabled={isLoading}
+                className="bg-white p-2 rounded border border-gray-200 hover:bg-blue-50 hover:border-blue-200 transition-all duration-200 flex flex-col items-center"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <p className="font-medium text-blue-600 mb-1">사용자</p>
+                <p className="text-xs text-gray-600">user1</p>
+                <p className="text-xs text-gray-600">user123</p>
+              </motion.button>
             </div>
           </motion.div>
         </div>

@@ -45,6 +45,7 @@ export type Order = {
   status: OrderStatus;
   customerId: string;
   customerName: string;
+  companyName?: string;
   items: OrderItem[];
   note?: string;
 };
