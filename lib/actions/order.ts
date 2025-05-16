@@ -2,6 +2,7 @@
 
 import { getCollection, collections } from '@/lib/mongodb';
 import { Order, OrderItem, OrderStatus } from '@/lib/types';
+import { documentToOrder } from '@/lib/utils';
 import { ObjectId } from 'mongodb';
 import { revalidatePath } from 'next/cache';
 import { getCurrentUser } from './auth';
@@ -26,17 +27,9 @@ export async function getOrders() {
       .sort({ date: -1 }) // 최신순 정렬
       .toArray();
     
-    return orders.map(order => ({
-      id: order._id.toString(),
-      date: order.date || new Date().toISOString(),
-      status: order.status || '대기',
-      customerId: order.customerId || '',
-      customerName: order.customerName || '',
-      items: order.items || [],
-      note: order.note
-    }));
+    return orders.map(order => documentToOrder(order));
   } catch (error) {
-    console.error('주문 목록 조회, 오류:', error);
+    console.error('주문 목록 조회 오류:', error);
     return { error: '주문 목록을 가져오는 중 오류가 발생했습니다.' };
   }
 }
@@ -63,15 +56,7 @@ export async function getOrderById(id: string) {
       return { error: '이 주문에 접근할 권한이 없습니다.' };
     }
     
-    return {
-      id: order._id.toString(),
-      date: order.date || new Date().toISOString(),
-      status: order.status || '대기',
-      customerId: order.customerId || '',
-      customerName: order.customerName || '',
-      items: order.items || [],
-      note: order.note
-    };
+    return documentToOrder(order);
   } catch (error) {
     console.error('주문 조회 오류:', error);
     return { error: '주문을 가져오는 중 오류가 발생했습니다.' };
