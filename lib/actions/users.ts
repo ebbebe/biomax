@@ -3,6 +3,7 @@
 import { getCollection, collections } from '@/lib/mongodb';
 import { User, UserRole, UserStatus } from '@/lib/types';
 import { ObjectId } from 'mongodb';
+import bcrypt from 'bcryptjs';
 
 // 모든 사용자 목록 조회
 export async function getAllUsers() {
@@ -40,21 +41,31 @@ export async function getUserById(userId: string) {
   }
 }
 
+// 비밀번호 해싱 함수
+async function hashPassword(password: string): Promise<string> {
+  const salt = await bcrypt.genSalt(10);
+  return bcrypt.hash(password, salt);
+}
+
 // 새 사용자 추가
-export async function createUser(formData: FormData) {
+export async function createUser(userData: {
+  username: string;
+  password: string;
+  name: string;
+  companyName: string;
+  businessNumber: string;
+  phone: string;
+  address: string;
+  productIds: string[];
+  status?: UserStatus;
+  role?: UserRole;
+}) {
   try {
-    const username = formData.get('username') as string;
-    const password = formData.get('password') as string;
-    const name = formData.get('name') as string;
-    const companyName = formData.get('companyName') as string;
-    const businessNumber = formData.get('businessNumber') as string;
-    const phone = formData.get('phone') as string;
-    const address = formData.get('address') as string;
-    const status = formData.get('status') as UserStatus;
-    const role = formData.get('role') as UserRole;
-    
-    // 제품 ID 배열 처리
-    const productIds = formData.getAll('productIds') as string[];
+    const { 
+      username, password, name, companyName, 
+      businessNumber, phone, address, productIds,
+      status = 'allowed', role = 'user'
+    } = userData;
     
     if (!username || !password || !name || !companyName || !businessNumber || !phone || !address) {
       return { error: '모든 필수 필드를 입력해주세요.' };
@@ -70,17 +81,20 @@ export async function createUser(formData: FormData) {
     
     const now = new Date().toISOString();
     
+    // 비밀번호 해싱
+    const hashedPassword = await hashPassword(password);
+    
     const newUser = {
       username,
-      password, // 실제 환경에서는 비밀번호를 해싱해야 합니다
+      password: hashedPassword,
       name,
       companyName,
       businessNumber,
       phone,
       address,
-      productIds,
-      status: status || 'allowed',
-      role: role || 'user',
+      productIds: productIds || [],
+      status,
+      role,
       lastLogin: null,
       createdAt: now,
       updatedAt: now
@@ -100,20 +114,24 @@ export async function createUser(formData: FormData) {
 }
 
 // 사용자 정보 수정
-export async function updateUser(userId: string, formData: FormData) {
+export async function updateUser(userId: string, userData: {
+  username: string;
+  password?: string;
+  name: string;
+  companyName: string;
+  businessNumber: string;
+  phone: string;
+  address: string;
+  productIds: string[];
+  status: UserStatus;
+  role: UserRole;
+}) {
   try {
-    const username = formData.get('username') as string;
-    const password = formData.get('password') as string;
-    const name = formData.get('name') as string;
-    const companyName = formData.get('companyName') as string;
-    const businessNumber = formData.get('businessNumber') as string;
-    const phone = formData.get('phone') as string;
-    const address = formData.get('address') as string;
-    const status = formData.get('status') as UserStatus;
-    const role = formData.get('role') as UserRole;
-    
-    // 제품 ID 배열 처리
-    const productIds = formData.getAll('productIds') as string[];
+    const { 
+      username, password, name, companyName, 
+      businessNumber, phone, address, productIds,
+      status, role
+    } = userData;
     
     if (!username || !name || !companyName || !businessNumber || !phone || !address) {
       return { error: '모든 필수 필드를 입력해주세요.' };
@@ -138,15 +156,15 @@ export async function updateUser(userId: string, formData: FormData) {
       businessNumber,
       phone,
       address,
-      productIds,
+      productIds: productIds || [],
       status,
       role,
       updatedAt: new Date().toISOString()
     };
     
-    // 비밀번호가 제공된 경우에만 업데이트
-    if (password) {
-      updateData.password = password; // 실제 환경에서는 비밀번호를 해싱해야 합니다
+    // 비밀번호가 제공된 경우에만 해싱하여 업데이트
+    if (password && password.trim() !== '') {
+      updateData.password = await hashPassword(password);
     }
     
     const result = await usersCollection.updateOne(
@@ -169,6 +187,19 @@ export async function updateUser(userId: string, formData: FormData) {
 export async function deleteUser(userId: string) {
   try {
     const usersCollection = await getCollection(collections.users);
+    
+    // 삭제 전 관리자 수 확인
+    const adminCount = await usersCollection.countDocuments({ role: 'admin' });
+    const userToDelete = await usersCollection.findOne({ _id: new ObjectId(userId) });
+    
+    if (!userToDelete) {
+      return { error: '사용자를 찾을 수 없습니다.' };
+    }
+    
+    // 마지막 관리자는 삭제할 수 없음
+    if (userToDelete.role === 'admin' && adminCount <= 1) {
+      return { error: '마지막 관리자는 삭제할 수 없습니다.' };
+    }
     
     const result = await usersCollection.deleteOne({ _id: new ObjectId(userId) });
     
