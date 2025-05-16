@@ -8,6 +8,42 @@ import { revalidatePath } from 'next/cache';
 import { getCurrentUser } from './auth';
 
 /**
+ * 최근 주문 목록을 가져옵니다.
+ * 관리자는 모든 주문을, 일반 사용자는 자신의 주문만 볼 수 있습니다.
+ * @param limit 가져올 주문의 최대 개수 (기본값: 5)
+ * @param userId 특정 사용자의 주문만 가져올 경우 사용자 ID
+ */
+export async function getRecentOrders(limit: number = 5, userId?: string) {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return { error: '인증되지 않은 사용자입니다.' };
+    }
+    
+    const ordersCollection = await getCollection(collections.orders);
+    
+    // 필터 조건 설정 (userId가 있으면 해당 사용자 주문만, 관리자는 모든 주문, 일반 사용자는 자신의 주문만)
+    let filter = {};
+    if (userId) {
+      filter = { customerId: userId };
+    } else if (user.role !== 'admin') {
+      filter = { customerId: user.id };
+    }
+    
+    const orders = await ordersCollection
+      .find(filter)
+      .sort({ date: -1 }) // 최신 날짜 기준 정렬
+      .limit(limit)
+      .toArray();
+    
+    return orders.map(order => documentToOrder(order));
+  } catch (error) {
+    console.error('최근 주문 목록 조회 오류:', error);
+    return { error: '최근 주문 목록을 가져오는 중 오류가 발생했습니다.' };
+  }
+}
+
+/**
  * 모든 주문 목록을 가져옵니다.
  * 관리자는 모든 주문을, 일반 사용자는 자신의 주문만 볼 수 있습니다.
  */
@@ -31,35 +67,6 @@ export async function getOrders() {
   } catch (error) {
     console.error('주문 목록 조회 오류:', error);
     return { error: '주문 목록을 가져오는 중 오류가 발생했습니다.' };
-  }
-}
-
-/**
- * 특정 ID의 주문을 가져옵니다.
- */
-export async function getOrderById(id: string) {
-  try {
-    const user = await getCurrentUser();
-    if (!user) {
-      return { error: '인증되지 않은 사용자입니다.' };
-    }
-
-    const ordersCollection = await getCollection(collections.orders);
-    const order = await ordersCollection.findOne({ _id: new ObjectId(id) });
-    
-    if (!order) {
-      return { error: '주문을 찾을 수 없습니다.' };
-    }
-    
-    // 일반 사용자는 자신의 주문만 볼 수 있음
-    if (user.role !== 'admin' && order.customerId !== user.id) {
-      return { error: '이 주문에 접근할 권한이 없습니다.' };
-    }
-    
-    return documentToOrder(order);
-  } catch (error) {
-    console.error('주문 조회 오류:', error);
-    return { error: '주문을 가져오는 중 오류가 발생했습니다.' };
   }
 }
 
@@ -102,44 +109,6 @@ export async function createOrder(orderData: {
   } catch (error) {
     console.error('주문 추가 오류:', error);
     return { error: '주문을 추가하는 중 오류가 발생했습니다.' };
-  }
-}
-
-/**
- * 주문 상태를 업데이트합니다.
- * 관리자만 주문 상태를 변경할 수 있습니다.
- */
-export async function updateOrderStatus(id: string, status: OrderStatus) {
-  try {
-    const user = await getCurrentUser();
-    if (!user) {
-      return { error: '인증되지 않은 사용자입니다.' };
-    }
-    
-    // 관리자만 주문 상태 변경 가능
-    if (user.role !== 'admin') {
-      return { error: '주문 상태를 변경할 권한이 없습니다.' };
-    }
-
-    const ordersCollection = await getCollection(collections.orders);
-    
-    const result = await ordersCollection.updateOne(
-      { _id: new ObjectId(id) },
-      { $set: { status, updatedAt: new Date().toISOString() } }
-    );
-    
-    if (result.matchedCount === 0) {
-      return { error: '주문을 찾을 수 없습니다.' };
-    }
-    
-    // 캐시 갱신
-    revalidatePath('/dashboard/orders');
-    revalidatePath('/dashboard/order-history');
-    
-    return { success: true };
-  } catch (error) {
-    console.error('주문 상태 업데이트 오류:', error);
-    return { error: '주문 상태를 업데이트하는 중 오류가 발생했습니다.' };
   }
 }
 

@@ -4,7 +4,7 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
-import { getRecentOrders } from '@/lib/actions/orders';
+import { getRecentOrders } from '@/lib/actions/order';
 import { Order } from '@/lib/types';
 
 export default function Dashboard() {
@@ -21,14 +21,30 @@ export default function Dashboard() {
       try {
         setLoading(true);
         
+        // 디버깅: 사용자 ID 출력
+        console.log('사용자 ID:', user.id);
+        console.log('사용자 정보:', user);
+        
         // 관리자는 모든 주문을, 일반 사용자는 자신의 주문만 가져옴
         if (user.role === 'admin') {
           const data = await getRecentOrders(5);
-          setRecentOrders(data);
+          console.log('관리자 주문 데이터:', data);
+          // 에러 확인
+          if ('error' in data) {
+            console.error('주문 데이터 조회 오류:', data.error);
+          } else {
+            setRecentOrders(data);
+          }
         } else {
           // 사용자 ID를 전달하여 해당 사용자의 주문만 가져옴
           const data = await getRecentOrders(5, user.id);
-          setRecentOrders(data);
+          console.log('사용자 주문 데이터:', data);
+          // 에러 확인
+          if ('error' in data) {
+            console.error('주문 데이터 조회 오류:', data.error);
+          } else {
+            setRecentOrders(data);
+          }
         }
       } catch (error) {
         console.error('최근 주문 불러오기 오류:', error);
