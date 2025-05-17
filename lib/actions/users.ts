@@ -224,3 +224,23 @@ export async function deleteUser(userId: string) {
     return { error: '서버 오류가 발생했습니다.' };
   }
 }
+
+// 사용자의 제품 목록 ID 가져오기
+export async function getUserProductIds(userId: string) {
+  try {
+    const usersCollection = await getCollection(collections.users);
+    const user = await usersCollection.findOne(
+      { _id: new ObjectId(userId) },
+      { projection: { productIds: 1 } }
+    );
+    
+    if (!user) {
+      return { error: '사용자를 찾을 수 없습니다.' };
+    }
+    
+    return { success: true, productIds: user.productIds || [] };
+  } catch (error) {
+    console.error('사용자 제품 목록 조회 오류:', error);
+    return { error: '사용자 제품 목록을 가져오는 중 오류가 발생했습니다.' };
+  }
+}

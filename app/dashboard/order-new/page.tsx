@@ -6,6 +6,8 @@ import { getProducts } from '@/lib/actions/product';
 import { createOrder, updateOrderStatus, getOrders, deleteOrder } from '@/lib/actions/order';
 import { toast, Toaster } from 'react-hot-toast';
 import { Order, OrderStatus } from '@/lib/types';
+import { useSession } from 'next-auth/react';
+import { getUserProductIds } from '@/lib/actions/users';
 
 // 날짜를 yyyy-MM-dd 형식으로 변환하는 함수
 const formatDate = (dateString?: string) => {
@@ -40,6 +42,7 @@ type ProcessingOrder = Order & {
 
 export default function OrderNewPage() {
   const router = useRouter();
+  const { data: session } = useSession();
   
   // 제품 데이터 상태
   const [products, setProducts] = useState<Product[]>([]);
@@ -68,10 +71,36 @@ export default function OrderNewPage() {
           setError(result.error as string);
         } else {
           // 수량 필드 추가
-          const productsWithQuantity = result.map(product => ({
+          let productsWithQuantity = result.map(product => ({
             ...product,
             quantity: 0
           }));
+          
+          // 일반 사용자는 계정에 연결된 제품만 표시 (DB에서 직접 조회)
+          if (session?.user && session.user.role !== 'admin') {
+            try {
+              const userProductsResult = await getUserProductIds(session.user.id);
+              
+              if ('error' in userProductsResult) {
+                setError(userProductsResult.error as string || '사용자별 제품 목록을 가져오는 중 오류가 발생했습니다.');
+              } else {
+                const userProductIds = userProductsResult.productIds;
+                
+                productsWithQuantity = productsWithQuantity.filter(product => 
+                  userProductIds.includes(product.id)
+                );
+                
+                // 연결된 제품이 없는 경우
+                if (productsWithQuantity.length === 0) {
+                  setError('주문 가능한 제품이 없습니다. 관리자에게 문의하세요.');
+                }
+              }
+            } catch (err) {
+              console.error('Error fetching user products:', err);
+              setError('사용자별 제품 목록을 가져오는 중 오류가 발생했습니다.');
+            }
+          }
+          
           setProducts(productsWithQuantity);
           setError(null);
         }
@@ -85,7 +114,7 @@ export default function OrderNewPage() {
 
     fetchProducts();
     fetchPendingOrders();
-  }, []);
+  }, [session]);
 
   // 대기 상태 주문 목록 가져오기
   const fetchPendingOrders = async () => {
@@ -319,81 +348,100 @@ export default function OrderNewPage() {
                 제품 선택
               </h3>
               <p className="mt-1 max-w-2xl text-sm text-gray-500">
-                주문할 제품을 선택하고 수량을 입력해주세요. 추가하면 자동으로 대기상태로 주문됩니다.
+                {session?.user?.role === 'admin' 
+                  ? '주문할 제품을 선택하고 수량을 입력해주세요. 추가하면 자동으로 대기상태로 주문됩니다.' 
+                  : '계정에 연결된 제품 목록입니다. 주문할 제품을 선택하고 수량을 입력해주세요.'}
               </p>
+              {session?.user?.role !== 'admin' && products.length > 0 && (
+                <div className="mt-2 text-xs text-blue-600">
+                  주문 가능한 제품 {products.length}개가 표시됩니다. 더 많은 제품 주문이 필요하시면 관리자에게 문의하세요.
+                </div>
+              )}
             </div>
             <div className="border-t border-gray-200">
-              <div className="max-h-[300px] overflow-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50 sticky top-0 z-10">
-                    <tr>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        제품명
-                      </th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        제품코드
-                      </th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        수량
-                      </th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        작업
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {products.map((product) => (
-                      <tr key={product.id}>
-                        <td className="px-4 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{product.name}</div>
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-500">{product.code}</div>
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <button
-                              type="button"
-                              onClick={() => handleQuantityChange(product.id, Math.max(0, product.quantity - 1))}
-                              className="p-1 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300"
-                            >
-                              <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
-                              </svg>
-                            </button>
-                            <input
-                              type="number"
-                              min="0"
-                              value={product.quantity}
-                              onChange={(e) => handleQuantityChange(product.id, parseInt(e.target.value) || 0)}
-                              className="mx-2 w-16 text-center border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => handleQuantityChange(product.id, product.quantity + 1)}
-                              className="p-1 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300"
-                            >
-                              <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-                              </svg>
-                            </button>
-                          </div>
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <button
-                            type="button"
-                            onClick={() => handleAddProduct(product.id)}
-                            disabled={product.quantity <= 0 || isSubmitting}
-                            className={`inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white ${product.quantity > 0 && !isSubmitting ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-300 cursor-not-allowed'} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
-                          >
-                            {isSubmitting ? '처리중...' : '주문추가'}
-                          </button>
-                        </td>
+              {products.length === 0 && !loading && !error ? (
+                <div className="py-6 px-4 text-center">
+                  <p className="text-gray-500">주문 가능한 제품이 없습니다. 관리자에게 문의하세요.</p>
+                </div>
+              ) : (
+                <div className="max-h-[300px] overflow-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50 sticky top-0 z-10">
+                      <tr>
+                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          제품명
+                        </th>
+                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          제품코드
+                        </th>
+                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          등록일
+                        </th>
+                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          수량
+                        </th>
+                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          작업
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {products.map((product) => (
+                        <tr key={product.id}>
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-900">{product.name}</div>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-500">{product.code}</div>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-500">{formatDate(product.registDate)}</div>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <button
+                                type="button"
+                                onClick={() => handleQuantityChange(product.id, Math.max(0, product.quantity - 1))}
+                                className="p-1 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300"
+                              >
+                                <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                                </svg>
+                              </button>
+                              <input
+                                type="number"
+                                min="0"
+                                value={product.quantity}
+                                onChange={(e) => handleQuantityChange(product.id, parseInt(e.target.value) || 0)}
+                                className="mx-2 w-16 text-center border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => handleQuantityChange(product.id, product.quantity + 1)}
+                                className="p-1 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300"
+                              >
+                                <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                                </svg>
+                              </button>
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button
+                              type="button"
+                              onClick={() => handleAddProduct(product.id)}
+                              disabled={product.quantity <= 0 || isSubmitting}
+                              className={`inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white ${product.quantity > 0 && !isSubmitting ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-300 cursor-not-allowed'} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
+                            >
+                              {isSubmitting ? '처리중...' : '주문추가'}
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           </div>
           
