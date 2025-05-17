@@ -8,7 +8,7 @@ declare module "next-auth" {
    * 기본 세션에 추가 속성을 확장합니다
    */
   interface Session {
-    user: User & DefaultSession["user"];
+    user: User;
   }
 }
 

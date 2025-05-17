@@ -10,7 +10,6 @@ export type User = {
   username: string;
   password: string;
   name: string;
-  email: string | null;
   companyName: string;
   businessNumber: string;
   phone: string;
@@ -19,6 +18,8 @@ export type User = {
   status: UserStatus;
   role: UserRole;
   lastLogin: string;
+  email?: string | null
+  image?: string | null
 };
 
 // 제품 타입

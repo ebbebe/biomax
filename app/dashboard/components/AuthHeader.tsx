@@ -2,8 +2,6 @@
 
 import { motion } from 'framer-motion';
 import { signOut } from 'next-auth/react';
-import { User } from '@/lib/types';
-
 
 export default function AuthHeader() {
 
