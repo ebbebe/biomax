@@ -4,20 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { UserRole } from '@/lib/types';
-
-type User = {
-  id: string;
-  name: string;
-  role: UserRole;
-  username: string;
-  companyName?: string;
-  businessNumber?: string;
-  phone?: string;
-  address?: string;
-  email?: string;
-  image?: string;
-};
+import { User } from '@/lib/types';
 
 export default function SidebarClient({ user }: { user: User }) {
   const pathname = usePathname();

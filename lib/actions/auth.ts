@@ -1,10 +1,8 @@
 'use server';
 
-import { redirect } from 'next/navigation';
-import { getCollection, collections } from '@/lib/mongodb';
 import { User, UserRole } from '@/lib/types';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/app/api/auth/options';
 
 /**
  * NextAuth.js를 사용하여 현재 로그인한 사용자 정보를 가져옵니다.

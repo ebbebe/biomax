@@ -1,28 +1,11 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { signOut } from 'next-auth/react';
-import { UserRole } from '@/lib/types';
+import { User } from '@/lib/types';
 
-// 서버에서 가져온 사용자 정보 타입
-type UserInfo = {
-  id: string;
-  name: string;
-  role: UserRole;
-  username: string;
-  companyName?: string;
-  businessNumber?: string;
-  phone?: string;
-  address?: string;
-  email?: string;
-  image?: string;
-};
 
-export default function AuthHeader({ user }: { user: UserInfo }) {
-  const router = useRouter();
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+export default function AuthHeader() {
 
   const handleLogout = async () => {
     try {
