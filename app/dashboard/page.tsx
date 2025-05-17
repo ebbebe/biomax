@@ -203,13 +203,9 @@ export default function Dashboard() {
           ) : (
             <ul className="divide-y divide-gray-100">
               {recentOrders.map((order, index) => (
-                <motion.li 
+                <li 
                   key={order.id}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  whileHover={{ backgroundColor: '#f9fafb' }}
-                  className="transition-colors duration-150"
+                  className="transition-colors duration-150 hover:bg-gray-50"
                 >
                   <div className="px-6 py-4">
                     <div className="flex items-center justify-between">
@@ -245,7 +241,7 @@ export default function Dashboard() {
                       </div>
                     </div>
                   </div>
-                </motion.li>
+                </li>
               ))}
             </ul>
           )}
