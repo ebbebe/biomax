@@ -8,6 +8,7 @@ import { toast, Toaster } from 'react-hot-toast';
 import { Order, OrderStatus } from '@/lib/types';
 import { useSession } from 'next-auth/react';
 import { getUserProductIds } from '@/lib/actions/users';
+import { sendOrderCompletionEmail } from '@/lib/email';
 
 // 날짜를 yyyy-MM-dd 형식으로 변환하는 함수
 const formatDate = (dateString?: string) => {
@@ -228,16 +229,33 @@ export default function OrderNewPage() {
     setIsSubmitting(true);
     
     try {
+      // 완료된 주문 목록 (이메일 발송용)
+      const completedOrders = [];
+      
       // 각 주문의 상태를 완료로 변경
       for (const order of selectedOrders) {
         const result = await updateOrderStatus(order.id, '완료');
         
         if ('error' in result) {
           toast.error(`주문 ${order.id} 처리 중 오류: ${result.error}`);
+        } else {
+          completedOrders.push(order);
         }
       }
       
-      toast.success('선택한 주문이 완료 처리되었습니다.');
+      // 성공적으로 완료 처리된 주문이 있는 경우
+      if (completedOrders.length > 0) {
+        toast.success('선택한 주문이 완료 처리되었습니다.');
+        
+        // 이메일 발송
+        const emailResult = await sendOrderCompletionEmail(completedOrders);
+        
+        if ('error' in emailResult) {
+          toast.error(`주문 이메일 발송 실패: ${emailResult.error}`);
+        } else {
+          toast.success('주문 완료 내역이 이메일로 발송되었습니다.');
+        }
+      }
       
       // 주문 목록 새로고침
       fetchPendingOrders();
