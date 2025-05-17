@@ -114,15 +114,23 @@ export default function OrderHistoryPage() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
           </svg>
           <h3 className="mt-2 text-lg font-medium text-gray-900">주문 내역이 없습니다</h3>
-          <p className="mt-1 text-gray-500">아직 등록된 주문이 없습니다. 새 주문을 등록해주세요.</p>
-          <div className="mt-6">
-            <a
-              href="/dashboard/order-new"
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              새 주문 등록하기
-            </a>
-          </div>
+          <p className="mt-1 text-gray-500">
+            {customerId 
+              ? `${customerName || '해당 거래처'}의 등록된 주문이 없습니다.`
+              : '아직 등록된 주문이 없습니다.'
+            }
+          </p>
+          {/* 관리자가 다른 회사의 주문을 조회하는 경우(customerId가 있는 경우)에는 버튼 표시하지 않음 */}
+          {!customerId && session?.user?.role !== 'admin' && (
+            <div className="mt-6">
+              <a
+                href="/dashboard/order-new"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                새 주문 등록하기
+              </a>
+            </div>
+          )}
         </div>
       ) : (
         <div className="bg-white shadow overflow-hidden sm:rounded-md">
