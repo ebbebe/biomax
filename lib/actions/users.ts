@@ -139,6 +139,17 @@ export async function updateUser(userId: string, userData: {
     
     const usersCollection = await getCollection(collections.users);
     
+    // 현재 사용자 정보 가져오기
+    const currentUser = await usersCollection.findOne({ _id: new ObjectId(userId) });
+    if (!currentUser) {
+      return { error: '사용자를 찾을 수 없습니다.' };
+    }
+    
+    // 역할 변경 시도 확인
+    if (currentUser.role !== role) {
+      return { error: '계정 생성 후에는 접속권한을 변경할 수 없습니다.' };
+    }
+    
     // 사용자명 중복 확인 (자기 자신 제외)
     const existingUser = await usersCollection.findOne({ 
       username, 
@@ -158,7 +169,7 @@ export async function updateUser(userId: string, userData: {
       address,
       productIds: productIds || [],
       status,
-      role,
+      role, // 원래 역할 유지
       updatedAt: new Date().toISOString()
     };
     

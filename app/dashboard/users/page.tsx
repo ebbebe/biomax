@@ -676,10 +676,16 @@ export default function UsersPage() {
                               className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                               value={currentUser.role}
                               onChange={(e) => setCurrentUser({ ...currentUser, role: e.target.value as UserRole })}
+                              disabled={!!currentUser.id} // 기존 계정 수정 시 비활성화
                             >
                               <option value="user">일반</option>
                               <option value="admin">관리</option>
                             </select>
+                            {currentUser.id && (
+                              <p className="mt-1 text-xs text-gray-500">
+                                계정 생성 후에는 접속권한을 변경할 수 없습니다.
+                              </p>
+                            )}
                           </div>
                         </div>
                         
