@@ -253,7 +253,7 @@ export default function OrderNewPage() {
         if ('error' in emailResult) {
           toast.error(`주문 이메일 발송 실패: ${emailResult.error}`);
         } else {
-          toast.success('주문 완료 내역이 이메일로 발송되었습니다.');
+          toast.success('주문이 접수되었습니다.');
         }
       }
       
