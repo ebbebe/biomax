@@ -159,7 +159,7 @@ export async function deleteOrder(id: string) {
  * 주문 상태를 업데이트합니다.
  * 완료 상태로 변경할 수 있습니다.
  */
-export async function updateOrderStatus(id: string, status: OrderStatus) {
+export async function updateOrderStatus(id: string, status: OrderStatus, note?: string) {
   try {
     const user = await getCurrentUser();
     if (!user) {
@@ -168,9 +168,14 @@ export async function updateOrderStatus(id: string, status: OrderStatus) {
 
     const ordersCollection = await getCollection(collections.orders);
     
+    // 메모가 제공된 경우 함께 업데이트
+    const updateData = note !== undefined 
+      ? { status, note } 
+      : { status };
+    
     const result = await ordersCollection.updateOne(
       { _id: new ObjectId(id) },
-      { $set: { status } }
+      { $set: updateData }
     );
     
     if (result.matchedCount === 0) {
