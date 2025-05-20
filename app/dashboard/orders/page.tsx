@@ -51,8 +51,6 @@ export default function OrdersPage() {
 
   const getStatusColor = (status: OrderStatus) => {
     switch (status) {
-      case '대기':
-        return 'bg-yellow-100 text-yellow-800';
       case '완료':
         return 'bg-green-100 text-green-800';
       default:
@@ -105,7 +103,6 @@ export default function OrdersPage() {
             onChange={(e) => setStatusFilter(e.target.value as OrderStatus | 'all')}
           >
             <option value="all">모든 상태</option>
-            <option value="대기">대기</option>
             <option value="완료">완료</option>
           </select>
         </div>
@@ -180,6 +177,9 @@ export default function OrdersPage() {
                               <th scope="col" className="px-2 py-1 text-left text-xs font-medium text-gray-500">
                                 수량
                               </th>
+                              <th scope="col" className="px-2 py-1 text-left text-xs font-medium text-gray-500">
+                                메모
+                              </th>
                             </tr>
                           </thead>
                           <tbody>
@@ -190,6 +190,9 @@ export default function OrdersPage() {
                                 </td>
                                 <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-500">
                                   {item.quantity}
+                                </td>
+                                <td className="px-2 py-1 text-sm text-gray-500">
+                                  {item.note || '-'}
                                 </td>
                               </tr>
                             ))}
@@ -203,13 +206,6 @@ export default function OrdersPage() {
                         <p className="text-sm text-gray-900">고객명: {order.customerName}</p>
                         <p className="text-sm text-gray-900">주문일자: {formatDate(order.date)}</p>
                       </div>
-                      
-                      {/* 주문 메모 */}
-                      {order.note && (
-                        <div className="mb-2">
-                          <p className="text-sm text-gray-900">메모: {order.note}</p>
-                        </div>
-                      )}
                     </div>
                   )}
                 </li>

@@ -31,6 +31,7 @@ export async function sendOrderCompletionEmail(orders: Order[], recipientEmail?:
           <td style="padding: 8px; border: 1px solid #ddd;">${item.name}</td>
           <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${item.quantity}</td>
           <td style="padding: 8px; border: 1px solid #ddd;">${item.registDate ? new Date(item.registDate).toLocaleDateString('ko-KR') : '-'}</td>
+          <td style="padding: 8px; border: 1px solid #ddd;">${item.note || '-'}</td>
         </tr>`
       ).join('');
       
@@ -38,7 +39,6 @@ export async function sendOrderCompletionEmail(orders: Order[], recipientEmail?:
         <div style="margin-bottom: 30px; border: 1px solid #eee; padding: 15px; border-radius: 5px;">
           <h3 style="margin-top: 0; color: #333;">주문 ID: ${order.id}</h3>
           <p><strong>주문자:</strong> ${order.customerName} (${order.companyName || ''})</p>
-          <p><strong>메모:</strong> ${order.note || '-'}</p>
           <p><strong>주문일:</strong> ${new Date(order.date).toLocaleString('ko-KR')}</p>
           <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
             <thead>
@@ -46,6 +46,7 @@ export async function sendOrderCompletionEmail(orders: Order[], recipientEmail?:
                 <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">제품명</th>
                 <th style="padding: 8px; border: 1px solid #ddd; text-align: center;">수량</th>
                 <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">등록일</th>
+                <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">제품 메모</th>
               </tr>
             </thead>
             <tbody>

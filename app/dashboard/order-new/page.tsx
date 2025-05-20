@@ -248,7 +248,8 @@ export default function OrderNewPage() {
               id: item.productId,
               name: item.name,
               quantity: item.quantity,
-              registDate: item.registDate
+              registDate: item.registDate,
+              note: item.note
             })),
             date: new Date().toISOString(),
             status: '완료',

@@ -181,7 +181,8 @@ export async function checkoutCartItems(cartItemIds: string[], note?: string) {
       id: item.productId,
       name: item.name,
       quantity: item.quantity,
-      registDate: item.registDate
+      registDate: item.registDate,
+      note: item.note
     }));
     
     // 주문 생성 (완료 상태)

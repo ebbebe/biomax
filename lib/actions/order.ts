@@ -76,8 +76,8 @@ export async function getOrders() {
 export async function createOrder(orderData: {
   items: OrderItem[];
   customerName?: string;
-  note?: string;
   status?: OrderStatus;
+  note?: string;
 }) {
   try {
     const user = await getCurrentUser();
@@ -225,7 +225,6 @@ export async function checkoutCartItems(cartItemIds: string[], note?: string) {
     // 주문 생성 (완료 상태)
     const orderResult = await createOrder({
       items: orderItems,
-      note,
       status: '완료'
     });
     
