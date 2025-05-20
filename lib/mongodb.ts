@@ -38,6 +38,7 @@ export const collections = {
   products: 'products',
   orders: 'orders',
   sessions: 'sessions',
+  cartItems: 'cartItems'
 };
 
 // 유틸리티 함수: DB와 컬렉션 가져오기

@@ -77,6 +77,7 @@ export async function createOrder(orderData: {
   items: OrderItem[];
   customerName?: string;
   note?: string;
+  status?: OrderStatus;
 }) {
   try {
     const user = await getCurrentUser();
@@ -88,7 +89,7 @@ export async function createOrder(orderData: {
     
     const newOrder = {
       date: new Date().toISOString(),
-      status: '대기' as OrderStatus,
+      status: orderData.status || '완료',
       customerId: user.id,
       customerName: orderData.customerName || user.name,
       companyName: user.companyName,
@@ -190,5 +191,47 @@ export async function updateOrderStatus(id: string, status: OrderStatus, note?: 
   } catch (error) {
     console.error('주문 상태 업데이트 오류:', error);
     return { error: '주문 상태를 업데이트하는 중 오류가 발생했습니다.' };
+  }
+}
+
+export async function checkoutCartItems(cartItemIds: string[], note?: string) {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return { error: '인증되지 않은 사용자입니다.' };
+    }
+
+    const cartItemsCollection = await getCollection(collections.cartItems);
+    
+    // 선택된 장바구니 항목 조회
+    const cartItems = await cartItemsCollection.find({
+      _id: { $in: cartItemIds.map(id => new ObjectId(id)) },
+      userId: user.id
+    }).toArray();
+    
+    if (cartItems.length === 0) {
+      return { error: '선택된 장바구니 항목이 없습니다.' };
+    }
+    
+    // OrderItem 형식으로 변환 (각 항목의 메모 포함)
+    const orderItems: OrderItem[] = cartItems.map(item => ({
+      id: item.productId,
+      name: item.name,
+      quantity: item.quantity,
+      registDate: item.registDate,
+      note: item.note
+    }));
+    
+    // 주문 생성 (완료 상태)
+    const orderResult = await createOrder({
+      items: orderItems,
+      note,
+      status: '완료'
+    });
+    
+    // ... existing code ...
+  } catch (error) {
+    console.error('장바구니 항목 결제 오류:', error);
+    return { error: '장바구니 항목을 결제하는 중 오류가 발생했습니다.' };
   }
 }

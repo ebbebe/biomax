@@ -31,7 +31,7 @@ export type Product = {
 };
 
 // 주문 상태 타입
-export type OrderStatus = '대기' | '완료';
+export type OrderStatus = '완료';
 
 // 주문 항목 타입
 export type OrderItem = {
@@ -39,6 +39,19 @@ export type OrderItem = {
   name: string;
   quantity: number;
   registDate?: string;
+  note?: string;
+};
+
+// 장바구니 항목 타입
+export type CartItem = {
+  id: string;
+  userId: string;
+  productId: string;
+  name: string;
+  quantity: number;
+  registDate?: string;
+  note?: string;
+  createdAt: string;
 };
 
 // 주문 타입
