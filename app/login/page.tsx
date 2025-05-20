@@ -122,147 +122,109 @@ function LoginContent() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <motion.div 
-        className="max-w-md w-full"
+        className="max-w-5xl w-full mx-auto overflow-hidden shadow-xl rounded-xl"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
-        <div className="bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-xl border border-white/50">
-          <motion.div className="text-center" variants={itemVariants}>
-            <Image
-              src="/logo.png"
-              alt="BioMax Logo"
-              width={180}
-              height={72}
-              className="mx-auto"
+        <div className="flex flex-col md:flex-row">
+          {/* 왼쪽 사이드 - 이미지, 로고, 텍스트 */}
+          <div className="w-full md:w-1/2 bg-blue-800 relative p-10 text-white flex flex-col justify-center items-start">
+            <div className="relative z-10">
+              <h1 className="text-4xl font-bold mb-3">바이오맥스</h1>
+              <h2 className="text-3xl font-bold mb-6">웹발주시스템</h2>
+              <p className="text-2xl font-light mb-2">Web Order</p>
+              <p className="text-2xl font-light">System</p>
+            </div>
+            
+            {/* 배경 이미지 (연구실/과학자 이미지) */}
+            <div 
+              className="absolute inset-0 bg-cover bg-center opacity-50"
+              style={{
+                backgroundImage: 'url(/lab_background.jpg)'
+              }}
             />
-            <h2 className="mt-6 text-center text-2xl font-bold text-gray-900 tracking-tight">
-              발주시스템 로그인
-            </h2>
-            <p className="mt-2 text-center text-sm text-gray-600">
-              바이오맥스 발주시스템에 오신 것을 환영합니다
-            </p>
-          </motion.div>
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-900 to-blue-700 opacity-70" />
+          </div>
           
-          <motion.form 
-            className="mt-8 space-y-5" 
-            onSubmit={handleSubmit}
-            variants={itemVariants}
-          >
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
-                  계정 아이디
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                    </svg>
-                  </div>
+          {/* 오른쪽 사이드 - 로그인 폼 */}
+          <div className="w-full md:w-1/2 bg-white p-10 flex flex-col justify-center">
+            <motion.div variants={itemVariants}>
+              <h2 className="text-2xl font-bold text-gray-800 mb-6">협력사/관리자 로그인</h2>
+              
+              <motion.form onSubmit={handleSubmit} className="space-y-6">
+                <div>
+                  <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+                    아이디/ID
+                  </label>
                   <input
                     id="username"
                     name="username"
                     type="text"
                     autoComplete="username"
                     required
-                    className="appearance-none block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 sm:text-sm"
-                    placeholder="계정 아이디 입력"
+                    className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                   />
                 </div>
-              </div>
-              
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                  비밀번호
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                    </svg>
-                  </div>
+                
+                <div>
+                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                    비밀번호/Password
+                  </label>
                   <input
                     id="password"
                     name="password"
                     type="password"
                     autoComplete="current-password"
                     required
-                    className="appearance-none block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 sm:text-sm"
-                    placeholder="비밀번호 입력"
+                    className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />
                 </div>
-              </div>
-            </div>
 
-            {error && (
-              <motion.div 
-                className="text-red-500 text-sm text-center p-2 bg-red-50 rounded-lg"
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-              >
-                {error}
-              </motion.div>
-            )}
+                {error && (
+                  <motion.div 
+                    className="text-red-500 text-sm text-center p-2 bg-red-50 rounded-lg"
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                  >
+                    {error}
+                  </motion.div>
+                )}
 
-            <div>
-              <motion.button
-                type="submit"
-                disabled={isLoading}
-                className="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-all duration-200 shadow-sm"
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
-              >
-                {isLoading ? (
-                  <>
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    로그인 중...
-                  </>
-                ) : '로그인'}
-              </motion.button>
-            </div>
-          </motion.form>
-          
-          <motion.div 
-            className="mt-6 text-sm text-center text-gray-500 bg-gray-50 p-3 rounded-lg"
-            variants={itemVariants}
-          >
-            <p className="font-medium text-gray-600 mb-2">테스트 계정으로 로그인</p>
-            <div className="grid grid-cols-2 gap-2">
-              <motion.button
-                onClick={() => handleAutoLogin('admin')}
-                disabled={isLoading}
-                className="bg-white p-2 rounded border border-gray-200 hover:bg-indigo-50 hover:border-indigo-200 transition-all duration-200 flex flex-col items-center"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <p className="font-medium text-indigo-600 mb-1">관리자</p>
-                <p className="text-xs text-gray-600">admin</p>
-                <p className="text-xs text-gray-600">1234</p>
-              </motion.button>
-              
-              <motion.button
-                onClick={() => handleAutoLogin('user')}
-                disabled={isLoading}
-                className="bg-white p-2 rounded border border-gray-200 hover:bg-blue-50 hover:border-blue-200 transition-all duration-200 flex flex-col items-center"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <p className="font-medium text-blue-600 mb-1">사용자</p>
-                <p className="text-xs text-gray-600">user1</p>
-                <p className="text-xs text-gray-600">1234</p>
-              </motion.button>
-            </div>
-          </motion.div>
+                <div>
+                  <motion.button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                  >
+                    {isLoading ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        로그인 중...
+                      </>
+                    ) : '로그인'}
+                  </motion.button>
+                </div>
+              </motion.form>
+            </motion.div>
+            
+            {/* 하단 연락처 정보 */}
+            <motion.div variants={itemVariants} className="mt-8 text-xs text-center text-gray-500">
+              <p>신규거래관련문의 031-554-5344 | sales@biomaxcorp.co.kr</p>
+              <p className="mt-1">ID 신규관련문의는 담당영업사원또는 사업소로 문의하시기 바랍니다.</p>
+            </motion.div>
+          </div>
         </div>
       </motion.div>
     </div>
