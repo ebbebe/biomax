@@ -265,7 +265,7 @@ export default function OrderNewPage() {
         //   }
         } catch (emailErr) {
           console.error('Error sending email:', emailErr);
-          toast.error('이메일 발송 중 오류가 발생했습니다.');
+          // toast.error('이메일 발송 중 오류가 발생했습니다.');
         }
         
         // 메모 초기화
