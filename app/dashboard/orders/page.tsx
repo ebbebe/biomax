@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getOrders } from '@/lib/actions/order';
+import { getOrders, deleteOrder } from '@/lib/actions/order';
 import { toast, Toaster } from 'react-hot-toast';
 import { formatDate } from '@/lib/utils';
+import { getCurrentUser } from '@/lib/actions/auth';
 
 import { Order, OrderStatus } from '@/lib/types';
 
@@ -12,33 +13,48 @@ export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   
   // 주문 목록 가져오기
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        setLoading(true);
-        const result = await getOrders();
-        
-        if ('error' in result) {
-          setError(result.error);
-        } else {
-          setOrders(result as Order[]);
-          setError(null);
-        }
-      } catch (err) {
-        console.error('Error fetching orders:', err);
-        setError('주문 목록을 가져오는 중 오류가 발생했습니다.');
-      } finally {
-        setLoading(false);
+  const fetchOrders = async () => {
+    try {
+      setLoading(true);
+      const result = await getOrders();
+      
+      if ('error' in result) {
+        setError(result.error);
+      } else {
+        setOrders(result as Order[]);
+        setError(null);
       }
-    };
+    } catch (err) {
+      console.error('Error fetching orders:', err);
+      setError('주문 목록을 가져오는 중 오류가 발생했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchOrders();
+  // 사용자 권한 및 주문 목록 가져오기
+  useEffect(() => {
+    const initialize = async () => {
+      try {
+        // 현재 사용자 정보 가져오기
+        const user = await getCurrentUser();
+        setIsAdmin(user?.role === 'admin');
+      } catch (err) {
+        console.error('Error checking user role:', err);
+      }
+      
+      fetchOrders();
+    };
+    
+    initialize();
   }, []);
 
   const toggleOrderDetails = (orderId: string) => {
@@ -67,6 +83,37 @@ export default function OrdersPage() {
     return matchesStatus && matchesSearch;
   });
 
+  // 주문 삭제 처리
+  const handleDeleteOrder = async (orderId: string) => {
+    if (!isAdmin) {
+      toast.error('관리자만 주문을 삭제할 수 있습니다.');
+      return;
+    }
+    
+    // 삭제 확인
+    if (!window.confirm('정말로 이 주문을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+      return;
+    }
+    
+    try {
+      setDeleting(true);
+      const result = await deleteOrder(orderId);
+      
+      if ('error' in result) {
+        toast.error(result.error || '주문 삭제 중 오류가 발생했습니다.');
+      } else {
+        toast.success('주문이 성공적으로 삭제되었습니다.');
+        // 주문 목록 새로고침
+        await fetchOrders();
+      }
+    } catch (err) {
+      console.error('Error deleting order:', err);
+      toast.error('주문 삭제 중 오류가 발생했습니다.');
+    } finally {
+      setDeleting(false);
+    }
+  };
+  
   return (
     <div>
       <Toaster position="top-center" />
@@ -152,7 +199,7 @@ export default function OrdersPage() {
                       </svg>
                       {formatDate(order.date)}
                     </div>
-                    <div>
+                    <div className="flex space-x-4">
                       <button
                         type="button"
                         onClick={() => toggleOrderDetails(order.id)}
@@ -160,6 +207,16 @@ export default function OrdersPage() {
                       >
                         {expandedOrder === order.id ? '접기' : '상세보기'}
                       </button>
+                      {isAdmin && (
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteOrder(order.id)}
+                          disabled={deleting}
+                          className="text-sm text-red-600 hover:text-red-900 disabled:opacity-50"
+                        >
+                          삭제
+                        </button>
+                      )}
                     </div>
                   </div>
                   
